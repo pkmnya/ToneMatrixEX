@@ -25,7 +25,8 @@ const NOTE_DURATION = '16n';
 
 interface SynthPool {
   polySynth: Tone.PolySynth;
-  reverb: Tone.Reverb;
+  delay: Tone.PingPongDelay;
+  eq: Tone.EQ3;
   filter: Tone.Filter;
   vol: Tone.Volume;
   disposed: boolean;
@@ -57,15 +58,18 @@ export class AudioEngine {
       envelope: { ...ADSR_DEFAULTS },
     });
 
-    // Effects chain (optimized for crystal clear high-end chime without low-end mud):
-    // polySynth → highpass filter (130Hz) → reverb → volume → destination
+    // Effects chain (synchronous — no async IR like Reverb):
+    // polySynth → highpass filter (130Hz) → eq → pingpong delay → volume → destination
     const filter = new Tone.Filter(130, 'highpass');
-    const reverb = new Tone.Reverb({ decay: 1.2, wet: 0.16 });
+    // Gentle presence boost to keep chime bright after effect chain
+    const eq = new Tone.EQ3({ low: -4, mid: 0, high: 3 });
+    // Ping-pong delay: short, low feedback, sparse wet — gives space without mud
+    const delay = new Tone.PingPongDelay({ delayTime: '8n', feedback: 0.18, wet: 0.14 });
     const vol    = new Tone.Volume(Tone.gainToDb(config.volume));
 
-    polySynth.chain(filter, reverb, vol, Tone.getDestination());
+    polySynth.chain(filter, eq, delay, vol, Tone.getDestination());
 
-    this.pools.set(config.id, { polySynth, reverb, filter, vol, disposed: false });
+    this.pools.set(config.id, { polySynth, delay, eq, filter, vol, disposed: false });
   }
 
   /** Update volume without recreating the pool */
@@ -76,7 +80,6 @@ export class AudioEngine {
     }
   }
 
-  /** Update wave type — requires pool recreation */
   disposePool(id: string): void {
     const pool = this.pools.get(id);
     if (pool && !pool.disposed) {
@@ -85,7 +88,8 @@ export class AudioEngine {
         pool.polySynth.releaseAll();
         pool.polySynth.dispose();
         pool.filter.dispose();
-        pool.reverb.dispose();
+        pool.eq.dispose();
+        pool.delay.dispose();
         pool.vol.dispose();
       } catch (_) { /* ignore disposal errors */ }
     }
