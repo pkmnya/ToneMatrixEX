@@ -87,20 +87,27 @@ export class Mp3Exporter {
     const stepSeconds = 60 / (config.bpm * 4); // one 16th-note in seconds
     const loopSeconds = config.width * stepSeconds;
 
-    // Add a small tail for reverb decay
-    const tailSeconds = 1.5;
+    // Tail long enough for PingPongDelay echoes to decay naturally
+    const tailSeconds = 2.0;
     const totalSeconds = loopSeconds + tailSeconds;
 
     const buffer = await Tone.Offline(({ transport }) => {
-      // Per-compartment synth with same ADSR/effects as live engine
+      // ---- Exactly mirrors AudioEngine.createPool() ----
       const polySynth = new Tone.PolySynth(Tone.Synth, {
         oscillator: { type: this._toOscType(config.waveType) },
-        envelope: { attack: 0.001, decay: 0.15, sustain: 0.2, release: 0.6 },
+        envelope: { attack: 0.002, decay: 0.3, sustain: 0.05, release: 0.5 },
       });
-      const filter = new Tone.Filter(5000, 'lowpass');
-      const reverb  = new Tone.Reverb({ decay: 1.5, wet: 0.2 });
-      const vol     = new Tone.Volume(Tone.gainToDb(config.volume));
-      polySynth.chain(filter, reverb, vol, Tone.getDestination());
+
+      // Highpass filter to cut low-end mud (same as live engine)
+      const filter = new Tone.Filter(130, 'highpass');
+      // EQ3: gentle low cut, high presence boost for chime brightness
+      const eq = new Tone.EQ3({ low: -4, mid: 0, high: 3 });
+      // PingPongDelay: same params as live engine, fully synchronous (no async IR)
+      const delay = new Tone.PingPongDelay({ delayTime: '8n', feedback: 0.18, wet: 0.14 });
+      const vol   = new Tone.Volume(Tone.gainToDb(config.volume));
+
+      polySynth.chain(filter, eq, delay, vol, Tone.getDestination());
+      // ---- end mirror ----
 
       transport.bpm.value = config.bpm;
 
@@ -114,7 +121,9 @@ export class Mp3Exporter {
           }
         }
         if (freqs.length > 0) {
-          polySynth.triggerAttackRelease(freqs, '8n', triggerTime);
+          // Apply same polyphony volume normalization as live engine
+          const polyVol = freqs.length > 1 ? Tone.gainToDb(1 / freqs.length) : 0;
+          polySynth.triggerAttackRelease(freqs, '16n', triggerTime, Math.pow(10, polyVol / 20));
         }
       }
 
