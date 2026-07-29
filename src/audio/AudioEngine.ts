@@ -12,16 +12,16 @@ import * as Tone from 'tone';
 import { rowToFrequency } from '../core/ScaleBuilder';
 import type { CompartmentConfig, NoteRange, WaveType } from '../core/types';
 
-// ---- ADSR defaults (ported from C# SynthInstrument.PreGenerateSounds) ----
+// ---- ADSR defaults (optimized for percussive mallet/chime ToneMatrix sound) ----
 const ADSR_DEFAULTS = {
-  attack:  0.001,
-  decay:   0.15,
-  sustain: 0.2,
-  release: 0.6,
+  attack:  0.002,
+  decay:   0.3,
+  sustain: 0.05,
+  release: 0.5,
 } as const;
 
-// Note duration when triggered (slightly shorter than one step)
-const NOTE_DURATION = '8n';
+// Note duration when triggered (16th-note step for clean release without smearing)
+const NOTE_DURATION = '16n';
 
 interface SynthPool {
   polySynth: Tone.PolySynth;
@@ -57,10 +57,10 @@ export class AudioEngine {
       envelope: { ...ADSR_DEFAULTS },
     });
 
-    // Effects chain (mirrors C# SynthInstrument):
-    // polySynth → filter → reverb → volume → destination
-    const filter = new Tone.Filter(5000, 'lowpass');
-    const reverb = new Tone.Reverb({ decay: 1.5, wet: 0.2 });
+    // Effects chain (optimized for crystal clear high-end chime without low-end mud):
+    // polySynth → highpass filter (130Hz) → reverb → volume → destination
+    const filter = new Tone.Filter(130, 'highpass');
+    const reverb = new Tone.Reverb({ decay: 1.2, wet: 0.16 });
     const vol    = new Tone.Volume(Tone.gainToDb(config.volume));
 
     polySynth.chain(filter, reverb, vol, Tone.getDestination());
