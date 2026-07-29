@@ -216,34 +216,38 @@ export class GridRenderer {
     ctx.closePath();
   }
 
-  // ---- Mouse interaction ----
+  // ---- Mouse + Touch interaction ----
 
-  private _boundMouseDown!: (e: MouseEvent) => void;
-  private _boundMouseMove!: (e: MouseEvent) => void;
-  private _boundMouseUp!:   (e: MouseEvent) => void;
-  private _boundMouseLeave!:(e: MouseEvent) => void;
+  private _boundPointerDown!: (e: PointerEvent) => void;
+  private _boundPointerMove!: (e: PointerEvent) => void;
+  private _boundPointerUp!:   (e: PointerEvent) => void;
+  private _boundPointerLeave!:(e: PointerEvent) => void;
 
   private _bindMouse(): void {
-    this._boundMouseDown  = this._onMouseDown.bind(this);
-    this._boundMouseMove  = this._onMouseMove.bind(this);
-    this._boundMouseUp    = this._onMouseUp.bind(this);
-    this._boundMouseLeave = this._onMouseUp.bind(this);
+    this._boundPointerDown  = this._onPointerDown.bind(this);
+    this._boundPointerMove  = this._onPointerMove.bind(this);
+    this._boundPointerUp    = this._onPointerUp.bind(this);
+    this._boundPointerLeave = this._onPointerUp.bind(this);
 
-    this.canvas.addEventListener('mousedown',  this._boundMouseDown);
-    this.canvas.addEventListener('mousemove',  this._boundMouseMove);
-    this.canvas.addEventListener('mouseup',    this._boundMouseUp);
-    this.canvas.addEventListener('mouseleave', this._boundMouseLeave);
+    this.canvas.addEventListener('pointerdown',  this._boundPointerDown);
+    this.canvas.addEventListener('pointermove',  this._boundPointerMove);
+    this.canvas.addEventListener('pointerup',    this._boundPointerUp);
+    this.canvas.addEventListener('pointerleave', this._boundPointerLeave);
+    this.canvas.addEventListener('pointercancel',this._boundPointerUp);
+    // Prevent browser scroll/zoom interfering with grid drawing on touch
+    this.canvas.style.touchAction = 'none';
     this.canvas.style.cursor = 'crosshair';
   }
 
   private _unbindMouse(): void {
-    this.canvas.removeEventListener('mousedown',  this._boundMouseDown);
-    this.canvas.removeEventListener('mousemove',  this._boundMouseMove);
-    this.canvas.removeEventListener('mouseup',    this._boundMouseUp);
-    this.canvas.removeEventListener('mouseleave', this._boundMouseLeave);
+    this.canvas.removeEventListener('pointerdown',  this._boundPointerDown);
+    this.canvas.removeEventListener('pointermove',  this._boundPointerMove);
+    this.canvas.removeEventListener('pointerup',    this._boundPointerUp);
+    this.canvas.removeEventListener('pointerleave', this._boundPointerLeave);
+    this.canvas.removeEventListener('pointercancel',this._boundPointerUp);
   }
 
-  private _hitTest(e: MouseEvent): [number, number] | null {
+  private _hitTest(e: PointerEvent): [number, number] | null {
     if (!this.state) return null;
     const rect = this.canvas.getBoundingClientRect();
     const mx = e.clientX - rect.left;
@@ -259,22 +263,23 @@ export class GridRenderer {
     return [col, row];
   }
 
-  private _onMouseDown(e: MouseEvent): void {
+  private _onPointerDown(e: PointerEvent): void {
     e.preventDefault();
+    this.canvas.setPointerCapture(e.pointerId);
     const cell = this._hitTest(e);
     if (!cell || !this.state) return;
     const [col, row] = cell;
     const cur = this.state.grid[col]?.[row] ?? false;
     this.paintMode = cur ? 'erase' : 'paint';
     this.lastPaintedCell = cell;
-    // Toggle + test note (if painting ON)
     this.events.onCellToggled(col, row, !cur);
     if (!cur) this.events.onTestNote(row);
     this._dirty = true;
   }
 
-  private _onMouseMove(e: MouseEvent): void {
+  private _onPointerMove(e: PointerEvent): void {
     if (!this.paintMode) return;
+    e.preventDefault();
     const cell = this._hitTest(e);
     if (!cell || !this.state) return;
     const [col, row] = cell;
@@ -289,7 +294,8 @@ export class GridRenderer {
     }
   }
 
-  private _onMouseUp(): void {
+  private _onPointerUp(e: PointerEvent): void {
+    this.canvas.releasePointerCapture(e.pointerId);
     this.paintMode = null;
     this.lastPaintedCell = null;
   }

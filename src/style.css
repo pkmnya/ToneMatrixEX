@@ -662,3 +662,231 @@ html, body {
    Utility
    ============================================================ */
 ::selection { background: var(--accent-dim); color: var(--accent); }
+
+/* ============================================================
+   Mobile / Touch responsive styles
+   ============================================================ */
+
+/* ---- Tablet (≤900px) ---- */
+@media (max-width: 900px) {
+  :root {
+    --toolbar-height: 52px;
+    --spectrum-height: 64px;
+  }
+
+  .toolbar {
+    padding: 0 10px;
+    gap: 8px;
+  }
+
+  .toolbar-logo .logo-text { display: none; }
+
+  .toolbar-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .comp-sidebar {
+    width: 140px;
+    padding: 10px 8px;
+  }
+}
+
+/* ---- Phone (≤640px) ---- */
+@media (max-width: 640px) {
+  :root {
+    --toolbar-height: auto;
+    --spectrum-height: 56px;
+  }
+
+  /* Toolbar: stack into two rows on small screens */
+  .toolbar {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 8px 10px;
+    gap: 6px;
+    row-gap: 6px;
+  }
+
+  .toolbar-logo {
+    flex: 1;
+    font-size: 14px;
+  }
+
+  .toolbar-logo .logo-text { display: none; }
+
+  .toolbar-center {
+    order: 3;
+    width: 100%;
+    gap: 6px;
+  }
+
+  .toolbar-right {
+    gap: 4px;
+  }
+
+  /* Make all toolbar buttons big enough to tap safely (44px height) */
+  .toolbar-btn {
+    min-height: 40px;
+    min-width: 40px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  /* Show icon only for save/load on small screens to save space */
+  .toolbar-btn.btn-ghost .btn-label-text,
+  .toolbar-btn.btn-secondary .btn-label-text {
+    display: none;
+  }
+
+  /* Compartments: allow vertical layout if only one panel */
+  .compartments-area {
+    padding: 8px;
+    gap: 6px;
+    /* Enable native momentum scroll on iOS */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Full-width panels on phones by default */
+  .compartment-panel {
+    min-width: calc(100vw - 16px);
+    flex-direction: column;
+    height: auto;
+  }
+
+  /* Grid canvas takes most of the vertical space */
+  .comp-canvas-wrap {
+    min-height: 220px;
+    flex: none;
+    height: 220px;
+  }
+
+  /* Resize handle: hide on mobile (panel is auto-sized) */
+  .comp-resize-handle {
+    display: none;
+  }
+
+  /* Sidebar: horizontal scrolling row under the grid */
+  .comp-sidebar {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    overflow-x: auto;
+    overflow-y: hidden;
+    max-height: 180px;
+  }
+
+  .comp-title {
+    width: 100%;
+    margin-bottom: 0;
+  }
+
+  /* Expand each row to fill nicely in the horizontal layout */
+  .comp-row {
+    min-width: 110px;
+    flex: 1 0 110px;
+  }
+
+  /* 44px min-height on all interactive controls to prevent mis-taps */
+  .comp-slider {
+    height: 6px;
+    margin: 10px 0;
+  }
+  .comp-slider::-webkit-slider-thumb {
+    width: 22px;
+    height: 22px;
+  }
+  .comp-slider::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: none;
+    box-shadow: 0 0 6px var(--accent-glow);
+  }
+
+  .comp-number {
+    min-height: 38px;
+    font-size: 14px;
+    padding: 6px 8px;
+  }
+
+  .comp-select {
+    min-height: 38px;
+    font-size: 13px;
+    padding: 8px 24px 8px 8px;
+  }
+
+  .comp-btn {
+    min-height: 38px;
+    font-size: 12px;
+    padding: 8px 6px;
+  }
+
+  /* Toggle: bigger click target */
+  .toggle {
+    width: 44px;
+    height: 26px;
+    padding: 2px;
+  }
+  .toggle-track {
+    width: 44px;
+    height: 26px;
+  }
+  .toggle-track::after {
+    width: 18px;
+    height: 18px;
+  }
+  .toggle input:checked + .toggle-track::after {
+    left: 22px;
+  }
+
+  /* Sidebar buttons: full-width on phone */
+  .comp-btn-row {
+    grid-template-columns: 1fr;
+    width: 100%;
+    min-width: 120px;
+  }
+
+  .comp-btn.btn-primary {
+    grid-column: 1;
+  }
+
+  /* Status indicator: inline */
+  .comp-status {
+    width: 100%;
+  }
+
+  /* Codec section: compact on phone */
+  .codec-header {
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px 10px;
+  }
+
+  .codec-textarea {
+    font-size: 10px;
+    height: 44px;
+  }
+
+  /* Spectrum: slimmer on phone */
+  .spectrum-section {
+    height: calc(var(--spectrum-height) + 28px);
+  }
+}
+
+/* ---- Prevent text selection during touch paint on canvas ---- */
+.comp-canvas {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ---- Ensure tap highlight is suppressed on interactive elements ---- */
+button, input, select, .toggle, .comp-btn, .toolbar-btn {
+  -webkit-tap-highlight-color: transparent;
+}

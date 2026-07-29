@@ -249,25 +249,38 @@ export class CompartmentPanel {
   // ---- Resize handle ----
 
   private _bindResizeHandle(handle: HTMLElement): void {
-    handle.addEventListener('mousedown', (e) => {
-      this._resizing = true;
-      this._resizeStartX = e.clientX;
-      this._resizeStartWidth = this.el.offsetWidth;
-      e.preventDefault();
-    });
+    let startX = 0;
+    let startWidth = 0;
 
-    document.addEventListener('mousemove', (e) => {
+    const onMove = (e: PointerEvent) => {
       if (!this._resizing) return;
-      const delta = e.clientX - this._resizeStartX;
-      const newW  = Math.max(MIN_PANEL_WIDTH, this._resizeStartWidth + delta);
+      const delta = e.clientX - startX;
+      const newW  = Math.max(MIN_PANEL_WIDTH, startWidth + delta);
       this.el.style.width = `${newW}px`;
       appStore.updateConfig(this._id, { panelWidth: newW });
       this.renderer.resize();
+    };
+
+    const onUp = (e: PointerEvent) => {
+      if (!this._resizing) return;
+      this._resizing = false;
+      handle.releasePointerCapture(e.pointerId);
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup',   onUp);
+    };
+
+    handle.addEventListener('pointerdown', (e) => {
+      this._resizing = true;
+      startX = e.clientX;
+      startWidth = this.el.offsetWidth;
+      handle.setPointerCapture(e.pointerId);
+      document.addEventListener('pointermove', onMove);
+      document.addEventListener('pointerup',   onUp);
+      e.preventDefault();
     });
 
-    document.addEventListener('mouseup', () => {
-      this._resizing = false;
-    });
+    // Touch-action: none so browser doesn't intercept the drag
+    handle.style.touchAction = 'none';
   }
 
   // ---- Widget helpers ----

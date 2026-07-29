@@ -43,13 +43,25 @@ export class App {
     this.compartmentsEl.id = 'compartments-area';
     this.root.appendChild(this.compartmentsEl);
 
-    // Map vertical mouse wheel to horizontal scrolling
+    // Map vertical mouse wheel to horizontal scrolling (desktop)
     this.compartmentsEl.addEventListener('wheel', (e: WheelEvent) => {
       if (e.deltaY !== 0 && this.compartmentsEl.scrollWidth > this.compartmentsEl.clientWidth) {
         e.preventDefault();
         this.compartmentsEl.scrollLeft += e.deltaY;
       }
     }, { passive: false });
+
+    // Touch swipe → horizontal scroll (mobile): one-finger swipe left/right
+    let _touchStartX = 0;
+    let _touchScrollLeft = 0;
+    this.compartmentsEl.addEventListener('touchstart', (e: TouchEvent) => {
+      _touchStartX = e.touches[0].clientX;
+      _touchScrollLeft = this.compartmentsEl.scrollLeft;
+    }, { passive: true });
+    this.compartmentsEl.addEventListener('touchmove', (e: TouchEvent) => {
+      const dx = _touchStartX - e.touches[0].clientX;
+      this.compartmentsEl.scrollLeft = _touchScrollLeft + dx;
+    }, { passive: true });
 
     // Spectrum section
     const specSection = document.createElement('section');
