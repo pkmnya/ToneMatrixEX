@@ -19,6 +19,48 @@ export class PlaybackController {
   private _currentColumn = 0;
   private _justSwitched = false; // skip "loop complete" check on the first tick after switch
 
+  constructor() {
+    appStore.subscribe((event) => {
+      if (!appStore.isPlaying || !this._currentCompartmentId) return;
+
+      if (event.type === 'COMPARTMENT_CONFIG_CHANGED') {
+        if (event.compartmentId === this._currentCompartmentId) {
+          const state = appStore.getState(event.compartmentId);
+          if (!state) return;
+
+          // Live update BPM if changed
+          if (event.changes.bpm !== undefined) {
+            Tone.getTransport().bpm.value = state.config.bpm;
+          }
+
+          // If deactivated during playback, switch to next or stop
+          if (event.changes.isActive === false) {
+            const next = this._findNextActive(this._currentCompartmentId);
+            if (next && next.config.id !== this._currentCompartmentId) {
+              this._switchTo(next.config.id);
+            } else {
+              this.stop();
+            }
+          }
+
+          // If width shrank below current column, wrap column
+          if (this._currentColumn >= state.config.width) {
+            this._currentColumn = 0;
+          }
+        }
+      } else if (event.type === 'COMPARTMENT_REMOVED') {
+        if (event.compartmentId === this._currentCompartmentId) {
+          const next = this._findNextActive(null);
+          if (next) {
+            this._switchTo(next.config.id);
+          } else {
+            this.stop();
+          }
+        }
+      }
+    });
+  }
+
   // ---- Public API ----
 
   async start(): Promise<void> {

@@ -43,6 +43,14 @@ export class App {
     this.compartmentsEl.id = 'compartments-area';
     this.root.appendChild(this.compartmentsEl);
 
+    // Map vertical mouse wheel to horizontal scrolling
+    this.compartmentsEl.addEventListener('wheel', (e: WheelEvent) => {
+      if (e.deltaY !== 0 && this.compartmentsEl.scrollWidth > this.compartmentsEl.clientWidth) {
+        e.preventDefault();
+        this.compartmentsEl.scrollLeft += e.deltaY;
+      }
+    }, { passive: false });
+
     // Spectrum section
     const specSection = document.createElement('section');
     specSection.className = 'spectrum-section';
