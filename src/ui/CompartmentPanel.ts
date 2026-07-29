@@ -45,6 +45,10 @@ export class CompartmentPanel {
     this.el.remove();
   }
 
+  resize(): void {
+    this.renderer.resize();
+  }
+
   // ---- DOM construction ----
 
   private _build(): HTMLElement {

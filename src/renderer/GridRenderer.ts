@@ -15,7 +15,7 @@ const CELL_SIZE     = 20;    // px per cell (adaptive)
 const GAP           = 2;     // px gap between cells
 const LABEL_WIDTH   = 32;    // px for note labels on left
 const HEADER_HEIGHT = 20;    // px top header for column numbers
-const MIN_CELL_SIZE = 12;
+const MIN_CELL_SIZE = 4;
 const MAX_CELL_SIZE = 28;
 
 // Color palette
@@ -99,13 +99,13 @@ export class GridRenderer {
     if (!this.state) return;
     const rows = this.state.grid[0]?.length ?? 16;
 
-    // Fit cell size to available canvas area
-    const availW = this.canvas.width - LABEL_WIDTH;
-    const availH = this.canvas.height - HEADER_HEIGHT;
+    // Fit cell size to available canvas area in CSS pixels
+    const availW = (this.canvas.clientWidth || 300) - LABEL_WIDTH;
+    const availH = (this.canvas.clientHeight || 300) - HEADER_HEIGHT;
 
-    const cols = this.state.config.width;
-    const byW = Math.floor((availW - GAP) / (cols + GAP));
-    const byH = Math.floor((availH - GAP) / (rows + GAP));
+    const cols = Math.max(1, this.state.config.width);
+    const byW = Math.floor(availW / cols - GAP);
+    const byH = Math.floor(availH / rows - GAP);
 
     this._cellSize = Math.max(MIN_CELL_SIZE, Math.min(MAX_CELL_SIZE, byW, byH));
   }

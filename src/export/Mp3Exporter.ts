@@ -14,8 +14,29 @@
 import * as Tone from 'tone';
 // @ts-ignore — lamejs has no bundled types
 import { Mp3Encoder } from 'lamejs';
+// @ts-ignore
+import MPEGMode from 'lamejs/src/js/MPEGMode.js';
+// @ts-ignore
+import Lame from 'lamejs/src/js/Lame.js';
+// @ts-ignore
+import BitStream from 'lamejs/src/js/BitStream.js';
+// @ts-ignore
+import common from 'lamejs/src/js/common.js';
 import { rowToFrequency } from '../core/ScaleBuilder';
 import type { CompartmentState } from '../core/types';
+
+// Setup required globals for lamejs internal CommonJS scripts in Vite ESM bundle
+function setupLamejsGlobals(): void {
+  const g = (typeof window !== 'undefined' ? window : globalThis) as Record<string, unknown>;
+  g['MPEGMode'] = MPEGMode;
+  g['Lame'] = Lame;
+  g['BitStream'] = BitStream;
+  if (common && typeof common === 'object') {
+    for (const key of Object.keys(common)) {
+      g[key] = (common as Record<string, unknown>)[key];
+    }
+  }
+}
 import { NOTE_RANGE_ROWS } from '../core/types';
 
 export interface ExportProgress {
@@ -126,6 +147,7 @@ export class Mp3Exporter {
     const pcmR = this._floatToInt16(mergedR);
 
     // lamejs encode
+    setupLamejsGlobals();
     const encoder = new Mp3Encoder(CHANNELS, SAMPLE_RATE, BIT_RATE);
     const CHUNK = 1152; // lamejs recommended chunk size
     const mp3Parts: Uint8Array[] = [];
