@@ -3,10 +3,12 @@
  *
  * Design:
  * - One compartment plays at a time (relay/接力 mode).
- * - Uses Tone.Transport.scheduleRepeat at 16th-note intervals.
- * - When a compartment completes its full loop, the next active one starts.
- * - Each compartment has its own BPM — we update Transport.bpm on each switch.
- * - This means BPM changes seamlessly between compartments without restarting Transport.
+ * - Uses ONE persistent Tone.Transport.scheduleRepeat at 16th-note intervals.
+ *   This event is NEVER cancelled during compartment switches — only in stop().
+ * - Compartment switching only mutates _currentCompartmentId / _currentColumn
+ *   and updates Transport.bpm.value in-place. The audio thread never sees a gap.
+ * - This is the only correct way to avoid the "BPM change → switch → stutter" bug
+ *   caused by cancel+reschedule misaligning with the Transport lookahead buffer.
  */
 
 import * as Tone from 'tone';
@@ -28,7 +30,7 @@ export class PlaybackController {
           const state = appStore.getState(event.compartmentId);
           if (!state) return;
 
-          // Live update BPM if changed
+          // Live update BPM in-place — no reschedule needed, no gap
           if (event.changes.bpm !== undefined) {
             Tone.getTransport().bpm.value = state.config.bpm;
           }
@@ -73,12 +75,21 @@ export class PlaybackController {
     appStore.setPlaying(true);
     this._switchTo(first.config.id, true);
 
+    // Register ONE persistent repeat — never recreated during compartment switches
+    // This prevents any gap/stutter from cancel+reschedule misalignment
+    if (this._repeatEventId === null) {
+      this._repeatEventId = Tone.getTransport().scheduleRepeat(
+        (time) => this._tick(time),
+        '16n',
+      );
+    }
+
     Tone.getTransport().start();
   }
 
   stop(): void {
     Tone.getTransport().stop();
-    this._cancelRepeat();
+    this._cancelRepeat(); // only place we ever cancel the repeat
 
     if (this._currentCompartmentId) {
       appStore.resetPlaybackColumn(this._currentCompartmentId);
@@ -91,6 +102,10 @@ export class PlaybackController {
 
   // ---- Internal ----
 
+  /**
+   * Switch the "active compartment" by mutating state pointers only.
+   * Does NOT cancel or reschedule the Transport repeat — that would cause a gap.
+   */
   private _switchTo(id: string, isFirstStart = false): void {
     const prev = this._currentCompartmentId;
 
@@ -106,16 +121,8 @@ export class PlaybackController {
     const state = appStore.getState(id);
     if (!state) return;
 
-    // Update Transport BPM for this compartment
+    // Update Transport BPM in-place (no cancel/reschedule — no gap)
     Tone.getTransport().bpm.value = state.config.bpm;
-
-    // Cancel existing repeat and schedule a new one
-    this._cancelRepeat();
-
-    this._repeatEventId = Tone.getTransport().scheduleRepeat(
-      (time) => this._tick(time),
-      '16n',
-    );
 
     appStore.setActiveCompartment(id);
     if (prev !== null && !isFirstStart) {
@@ -146,7 +153,6 @@ export class PlaybackController {
 
     // Detect loop completion: we just wrapped back to column 0
     if (this._currentColumn === 0 && !this._justSwitched) {
-      // Schedule the compartment switch in the draw frame (safe for state mutations)
       Tone.getDraw().schedule(() => {
         this._handleLoopComplete(id);
       }, time);
@@ -161,7 +167,6 @@ export class PlaybackController {
     const next = this._findNextActive(finishedId);
     if (!next || next.config.id === finishedId) {
       // Only one active compartment — keep looping same one
-      // Just reset column (already at 0 since we wrapped)
       this._justSwitched = true;
       return;
     }
