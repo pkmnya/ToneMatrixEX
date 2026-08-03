@@ -8,7 +8,7 @@
 import { appStore } from '../core/AppStore';
 import { audioEngine } from '../audio/AudioEngine';
 import { GridRenderer } from '../renderer/GridRenderer';
-import type { CompartmentConfig, NoteRange, WaveType } from '../core/types';
+import type { CompartmentConfig, NoteRange, WaveType, FxType } from '../core/types';
 import { NOTE_RANGE_ROWS } from '../core/types';
 import { t } from '../core/i18n';
 
@@ -47,13 +47,15 @@ export class CompartmentPanel {
     if (handle) handle.title = t('panel.dragTitle');
 
     const labels = this.el.querySelectorAll('.comp-row > span:first-child');
-    if (labels.length >= 5) {
+    if (labels.length >= 7) {
       labels[0].textContent = t('panel.active');
       labels[1].textContent = 'BPM';
       labels[2].textContent = t('panel.columns');
       labels[3].textContent = t('panel.scale');
       labels[4].textContent = t('panel.wave');
-      labels[5].textContent = t('panel.volume');
+      labels[5].textContent = t('panel.fx');
+      labels[6].textContent = t('panel.fxLen');
+      labels[7].textContent = t('panel.volume');
     }
 
     const clearBtn = this.el.querySelector('.comp-btn-row .btn-ghost:nth-child(1)');
@@ -79,6 +81,12 @@ export class CompartmentPanel {
     const waveSelect = this.el.querySelector('select[name="waveType"]') as HTMLSelectElement;
     if (waveSelect) {
       Array.from(waveSelect.options).forEach(opt => {
+        opt.textContent = t('types.' + opt.value);
+      });
+    }
+    const fxSelect = this.el.querySelector('select[name="fxType"]') as HTMLSelectElement;
+    if (fxSelect) {
+      Array.from(fxSelect.options).forEach(opt => {
         opt.textContent = t('types.' + opt.value);
       });
     }
@@ -190,6 +198,34 @@ export class CompartmentPanel {
       audioEngine.createPool({ ...newCfg, waveType: v as any });
     });
     sb.appendChild(this._row(t('panel.wave'), waveSelect));
+
+    // FX type select
+    const fxTypeLabels: Record<FxType, string> = {
+      none: t('types.none'),
+      pingpong: t('types.pingpong'),
+      chorus: t('types.chorus'),
+      freeverb: t('types.freeverb'),
+    };
+    const fxSelect = this._select('fxType', fxTypeLabels, cfg.fxType, (v) => {
+      const newCfg = appStore.getState(id)!.config;
+      appStore.updateConfig(id, { fxType: v as any });
+      audioEngine.createPool({ ...newCfg, fxType: v as any });
+    });
+    sb.appendChild(this._row(t('panel.fx'), fxSelect));
+
+    // FX Length slider
+    const fxLenVal = document.createElement('span');
+    fxLenVal.className = 'slider-value';
+    fxLenVal.textContent = `${Math.round(cfg.fxLength * 100)}%`;
+
+    const fxLenSlider = this._slider('fxLength', 0, 100, 1, Math.round(cfg.fxLength * 100), (v) => {
+      const len = v / 100;
+      fxLenVal.textContent = `${v}%`;
+      const newCfg = appStore.getState(id)!.config;
+      appStore.updateConfig(id, { fxLength: len });
+      audioEngine.createPool({ ...newCfg, fxLength: len });
+    });
+    sb.appendChild(this._row(t('panel.fxLen'), fxLenSlider, fxLenVal));
 
     // Volume slider
     const volVal = document.createElement('span');

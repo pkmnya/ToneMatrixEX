@@ -64,9 +64,9 @@ export default defineConfig({
     rollupOptions: {
       output: {
         // 代码分块策略，将大库单独打包
-        manualChunks: {
-          tone: ['tone'],
-          lamejs: ['lamejs'],
+        manualChunks(id) {
+          if (id.includes('node_modules/tone')) return 'tone';
+          if (id.includes('node_modules/lamejs')) return 'lamejs';
         }
       }
     }

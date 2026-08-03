@@ -44,6 +44,8 @@
       "columns": "列数",
       "scale": "音阶",
       "wave": "音色",
+      "fx": "后期",
+      "fxLen": "时长",
       "volume": "音量",
       "clear": "清除",
       "duplicate": "复制",
@@ -59,7 +61,11 @@
       "sine": "正弦波",
       "sawtooth": "锯齿波",
       "square": "方波",
-      "triangle": "三角波"
+      "triangle": "三角波",
+      "none": "无 (None)",
+      "pingpong": "回声 (Echo)",
+      "chorus": "合唱 (Chorus)",
+      "freeverb": "混响 (Reverb)"
     }
   },
   "en": {
@@ -107,6 +113,8 @@
       "columns": "Cols",
       "scale": "Scale",
       "wave": "Wave",
+      "fx": "FX",
+      "fxLen": "Tail",
       "volume": "Vol",
       "clear": "Clear",
       "duplicate": "Dup",
@@ -122,7 +130,11 @@
       "sine": "Sine",
       "sawtooth": "Sawtooth",
       "square": "Square",
-      "triangle": "Triangle"
+      "triangle": "Triangle",
+      "none": "None",
+      "pingpong": "Echo",
+      "chorus": "Chorus",
+      "freeverb": "Reverb"
     }
   }
 }

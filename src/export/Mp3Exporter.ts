@@ -87,8 +87,13 @@ export class Mp3Exporter {
     const stepSeconds = 60 / (config.bpm * 4); // one 16th-note in seconds
     const loopSeconds = config.width * stepSeconds;
 
-    // Tail long enough for PingPongDelay echoes to decay naturally
-    const tailSeconds = 2.0;
+    // Dynamic tail based on FX
+    let tailSeconds = 0.5; // Base tail for ADSR release
+    if (config.fxType === 'pingpong' || config.fxType === 'freeverb') {
+      tailSeconds += 0.5 + (config.fxLength * 3.5); // Up to 4s extra for long reverbs/delays
+    } else if (config.fxType === 'chorus') {
+      tailSeconds += 0.5;
+    }
     const totalSeconds = loopSeconds + tailSeconds;
 
     const buffer = await Tone.Offline(({ transport }) => {
@@ -102,11 +107,22 @@ export class Mp3Exporter {
       const filter = new Tone.Filter(130, 'highpass');
       // EQ3: gentle low cut, high presence boost for chime brightness
       const eq = new Tone.EQ3({ low: -4, mid: 0, high: 3 });
-      // PingPongDelay: same params as live engine, fully synchronous (no async IR)
-      const delay = new Tone.PingPongDelay({ delayTime: '8n', feedback: 0.18, wet: 0.14 });
-      const vol   = new Tone.Volume(Tone.gainToDb(config.volume));
+      const vol = new Tone.Volume(Tone.gainToDb(config.volume));
 
-      polySynth.chain(filter, eq, delay, vol, Tone.getDestination());
+      let fxNode: Tone.ToneAudioNode | null = null;
+      if (config.fxType === 'pingpong') {
+        fxNode = new Tone.PingPongDelay({ delayTime: '8n', feedback: config.fxLength * 0.6, wet: 0.15 + (config.fxLength * 0.1) });
+      } else if (config.fxType === 'chorus') {
+        fxNode = new Tone.Chorus({ frequency: 1.5, delayTime: 3.5, depth: 0.5 + (config.fxLength * 0.5), wet: 0.5 }).start();
+      } else if (config.fxType === 'freeverb') {
+        fxNode = new Tone.Freeverb({ roomSize: 0.4 + (config.fxLength * 0.5), dampening: 3000, wet: 0.4 });
+      }
+
+      if (fxNode) {
+        polySynth.chain(filter, eq, fxNode, vol, Tone.getDestination());
+      } else {
+        polySynth.chain(filter, eq, vol, Tone.getDestination());
+      }
       // ---- end mirror ----
 
       transport.bpm.value = config.bpm;

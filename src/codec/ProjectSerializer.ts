@@ -10,7 +10,7 @@
  * This format is URL-hash-safe (no base64, just hex + delimiters).
  */
 
-import type { CompartmentState, NoteRange, WaveType } from '../core/types';
+import type { CompartmentState, NoteRange, WaveType, FxType } from '../core/types';
 import { NOTE_RANGE_ROWS } from '../core/types';
 import { BitmapCodec } from './BitmapCodec';
 
@@ -45,6 +45,20 @@ const CODE_TO_WAVE_TYPE: Record<string, WaveType> = {
   '3': 'triangle',
 };
 
+type FxTypeCode = '0' | '1' | '2' | '3';
+const FX_TYPE_TO_CODE: Record<FxType, FxTypeCode> = {
+  none: '0',
+  pingpong: '1',
+  chorus: '2',
+  freeverb: '3',
+};
+const CODE_TO_FX_TYPE: Record<string, FxType> = {
+  '0': 'none',
+  '1': 'pingpong',
+  '2': 'chorus',
+  '3': 'freeverb',
+};
+
 export class ProjectSerializer {
   static serialize(compartments: readonly CompartmentState[]): string {
     const parts = compartments.map((c) => {
@@ -59,6 +73,8 @@ export class ProjectSerializer {
         WAVE_TYPE_TO_CODE[config.waveType],
         config.volume.toFixed(2),
         config.panelWidth.toString(),
+        FX_TYPE_TO_CODE[config.fxType],
+        config.fxLength.toFixed(2),
         hex,
       ].join(SEP_INNER);
     });
@@ -78,11 +94,20 @@ export class ProjectSerializer {
 
         const [
           activeStr, bpmStr, rangeCode, widthStr,
-          waveCode, volStr, panelWidthStr, hex,
+          waveCode, volStr, panelWidthStr, 
+          field7, field8, field9
         ] = fields;
+
+        // Support both old format (8 fields) and new format (10 fields)
+        const isNewFormat = fields.length >= 10;
+        const fxCode = isNewFormat ? field7 : '0';
+        const fxLenStr = isNewFormat ? field8 : '0';
+        const hex = isNewFormat ? field9 : field7;
 
         const noteRange: NoteRange = CODE_TO_NOTE_RANGE[rangeCode] ?? 'pentatonic';
         const waveType:  WaveType  = CODE_TO_WAVE_TYPE[waveCode]   ?? 'sine';
+        const fxType:    FxType    = CODE_TO_FX_TYPE[fxCode]       ?? 'none';
+        const fxLength   = Math.max(0, Math.min(1, parseFloat(fxLenStr) || 0));
         const width      = Math.max(1, Math.min(512, parseInt(widthStr,  10) || 16));
         const bpm        = Math.max(30, Math.min(400, parseInt(bpmStr,   10) || 120));
         const volume     = Math.max(0, Math.min(1.5,  parseFloat(volStr)     || 0.8));
@@ -101,6 +126,8 @@ export class ProjectSerializer {
             waveType,
             volume,
             panelWidth,
+            fxType,
+            fxLength,
           },
           grid,
           currentColumn: -1,

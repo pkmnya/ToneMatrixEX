@@ -10,7 +10,7 @@
 
 import * as Tone from 'tone';
 import { rowToFrequency } from '../core/ScaleBuilder';
-import type { CompartmentConfig, NoteRange, WaveType } from '../core/types';
+import type { CompartmentConfig, NoteRange, WaveType, FxType } from '../core/types';
 
 // ---- ADSR defaults (optimized for percussive mallet/chime ToneMatrix sound) ----
 const ADSR_DEFAULTS = {
@@ -25,7 +25,7 @@ const NOTE_DURATION = '16n';
 
 interface SynthPool {
   polySynth: Tone.PolySynth;
-  delay: Tone.PingPongDelay;
+  fxNode: Tone.ToneAudioNode | null;
   eq: Tone.EQ3;
   filter: Tone.Filter;
   vol: Tone.Volume;
@@ -59,17 +59,31 @@ export class AudioEngine {
     });
 
     // Effects chain (synchronous — no async IR like Reverb):
-    // polySynth → highpass filter (130Hz) → eq → pingpong delay → volume → destination
+    // polySynth → highpass filter (130Hz) → eq → [fxNode] → volume → destination
     const filter = new Tone.Filter(130, 'highpass');
-    // Gentle presence boost to keep chime bright after effect chain
     const eq = new Tone.EQ3({ low: -4, mid: 0, high: 3 });
-    // Ping-pong delay: short, low feedback, sparse wet — gives space without mud
-    const delay = new Tone.PingPongDelay({ delayTime: '8n', feedback: 0.18, wet: 0.14 });
-    const vol    = new Tone.Volume(Tone.gainToDb(config.volume));
+    const vol = new Tone.Volume(Tone.gainToDb(config.volume));
 
-    polySynth.chain(filter, eq, delay, vol, Tone.getDestination());
+    let fxNode: Tone.ToneAudioNode | null = null;
+    
+    if (config.fxType === 'pingpong') {
+      // delayTime: 8n, feedback scales from 0.0 to 0.6 based on fxLength
+      fxNode = new Tone.PingPongDelay({ delayTime: '8n', feedback: config.fxLength * 0.6, wet: 0.15 + (config.fxLength * 0.1) });
+    } else if (config.fxType === 'chorus') {
+      // chorus depth scales with fxLength, frequency fixed at 1.5Hz
+      fxNode = new Tone.Chorus({ frequency: 1.5, delayTime: 3.5, depth: 0.5 + (config.fxLength * 0.5), wet: 0.5 }).start();
+    } else if (config.fxType === 'freeverb') {
+      // roomSize scales with fxLength
+      fxNode = new Tone.Freeverb({ roomSize: 0.4 + (config.fxLength * 0.5), dampening: 3000, wet: 0.4 });
+    }
 
-    this.pools.set(config.id, { polySynth, delay, eq, filter, vol, disposed: false });
+    if (fxNode) {
+      polySynth.chain(filter, eq, fxNode, vol, Tone.getDestination());
+    } else {
+      polySynth.chain(filter, eq, vol, Tone.getDestination());
+    }
+
+    this.pools.set(config.id, { polySynth, fxNode, eq, filter, vol, disposed: false });
   }
 
   /** Update volume without recreating the pool */
@@ -89,7 +103,7 @@ export class AudioEngine {
         pool.polySynth.dispose();
         pool.filter.dispose();
         pool.eq.dispose();
-        pool.delay.dispose();
+        if (pool.fxNode) pool.fxNode.dispose();
         pool.vol.dispose();
       } catch (_) { /* ignore disposal errors */ }
     }
