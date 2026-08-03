@@ -8,8 +8,9 @@
 import { appStore } from '../core/AppStore';
 import { audioEngine } from '../audio/AudioEngine';
 import { GridRenderer } from '../renderer/GridRenderer';
-import type { CompartmentConfig } from '../core/types';
-import { NOTE_RANGE_LABELS, WAVE_TYPE_LABELS, NOTE_RANGE_ROWS } from '../core/types';
+import type { CompartmentConfig, NoteRange, WaveType } from '../core/types';
+import { NOTE_RANGE_ROWS } from '../core/types';
+import { t } from '../core/i18n';
 
 const MIN_PANEL_WIDTH = 280;
 const SIDEBAR_WIDTH   = 160;
@@ -36,12 +37,58 @@ export class CompartmentPanel {
     // Create synth pool for this compartment
     const state = appStore.getState(compartmentId);
     if (state) audioEngine.createPool(state.config);
+
+    this._updateTexts = this._updateTexts.bind(this);
+    window.addEventListener('i18n-change', this._updateTexts);
+  }
+
+  private _updateTexts(): void {
+    const handle = this.el.querySelector('.comp-resize-handle') as HTMLElement;
+    if (handle) handle.title = t('panel.dragTitle');
+
+    const labels = this.el.querySelectorAll('.comp-row > span:first-child');
+    if (labels.length >= 5) {
+      labels[0].textContent = t('panel.active');
+      labels[1].textContent = 'BPM';
+      labels[2].textContent = t('panel.columns');
+      labels[3].textContent = t('panel.scale');
+      labels[4].textContent = t('panel.wave');
+      labels[5].textContent = t('panel.volume');
+    }
+
+    const clearBtn = this.el.querySelector('.comp-btn-row .btn-ghost:nth-child(1)');
+    if (clearBtn) clearBtn.textContent = t('panel.clear');
+    const dupBtn = this.el.querySelector('.comp-btn-row .btn-ghost:nth-child(2)');
+    if (dupBtn) dupBtn.textContent = t('panel.duplicate');
+    const deleteBtn = this.el.querySelector('.comp-btn-row .btn-danger');
+    if (deleteBtn) deleteBtn.textContent = t('panel.delete');
+    const addBtn = this.el.querySelector('.comp-btn-row .btn-primary');
+    if (addBtn) addBtn.textContent = t('panel.add');
+
+    const statusEl = this.el.querySelector('.comp-status') as HTMLElement;
+    if (statusEl && statusEl.textContent) {
+      statusEl.textContent = t('panel.playing');
+    }
+
+    const noteSelect = this.el.querySelector('select[name="noteRange"]') as HTMLSelectElement;
+    if (noteSelect) {
+      Array.from(noteSelect.options).forEach(opt => {
+        opt.textContent = t('types.' + opt.value);
+      });
+    }
+    const waveSelect = this.el.querySelector('select[name="waveType"]') as HTMLSelectElement;
+    if (waveSelect) {
+      Array.from(waveSelect.options).forEach(opt => {
+        opt.textContent = t('types.' + opt.value);
+      });
+    }
   }
 
   destroy(): void {
     this._unsubscribe?.();
     this.renderer.destroy();
     audioEngine.disposePool(this._id);
+    window.removeEventListener('i18n-change', this._updateTexts);
     this.el.remove();
   }
 
@@ -69,7 +116,7 @@ export class CompartmentPanel {
     // Resize handle
     const handle = document.createElement('div');
     handle.className = 'comp-resize-handle';
-    handle.title = '拖动调整宽度';
+    handle.title = t('panel.dragTitle');
     this._bindResizeHandle(handle);
 
     // Sidebar
@@ -94,7 +141,7 @@ export class CompartmentPanel {
     sb.appendChild(title);
 
     // Active toggle
-    sb.appendChild(this._row('激活', this._toggle('active', cfg.isActive, (v) => {
+    sb.appendChild(this._row(t('panel.active'), this._toggle('active', cfg.isActive, (v) => {
       appStore.updateConfig(id, { isActive: v });
       this.el.classList.toggle('comp--inactive', !v);
     })));
@@ -115,23 +162,34 @@ export class CompartmentPanel {
       appStore.updateConfig(id, { width: v });
       this.renderer.markDirty();
     });
-    sb.appendChild(this._row('列数', widthInput));
+    sb.appendChild(this._row(t('panel.columns'), widthInput));
 
     // Note range select
-    const rangeSelect = this._select('noteRange', NOTE_RANGE_LABELS, cfg.noteRange, (v) => {
+    const noteRangeLabels: Record<NoteRange, string> = {
+      pentatonic: t('types.pentatonic'),
+      diatonic: t('types.diatonic'),
+      chromatic: t('types.chromatic'),
+    };
+    const rangeSelect = this._select('noteRange', noteRangeLabels, cfg.noteRange, (v) => {
       appStore.updateConfig(id, { noteRange: v as any });
       audioEngine.createPool(appStore.getState(id)!.config);
       this.renderer.markDirty();
     });
-    sb.appendChild(this._row('音阶', rangeSelect));
+    sb.appendChild(this._row(t('panel.scale'), rangeSelect));
 
     // Wave type select
-    const waveSelect = this._select('waveType', WAVE_TYPE_LABELS, cfg.waveType, (v) => {
+    const waveTypeLabels: Record<WaveType, string> = {
+      sine: t('types.sine'),
+      sawtooth: t('types.sawtooth'),
+      square: t('types.square'),
+      triangle: t('types.triangle'),
+    };
+    const waveSelect = this._select('waveType', waveTypeLabels, cfg.waveType, (v) => {
       const newCfg = appStore.getState(id)!.config;
       appStore.updateConfig(id, { waveType: v as any });
       audioEngine.createPool({ ...newCfg, waveType: v as any });
     });
-    sb.appendChild(this._row('音色', waveSelect));
+    sb.appendChild(this._row(t('panel.wave'), waveSelect));
 
     // Volume slider
     const volVal = document.createElement('span');
@@ -144,25 +202,25 @@ export class CompartmentPanel {
       appStore.updateConfig(id, { volume: vol });
       audioEngine.setVolume(id, vol);
     });
-    sb.appendChild(this._row('音量', volSlider, volVal));
+    sb.appendChild(this._row(t('panel.volume'), volSlider, volVal));
 
     // --- Action buttons ---
     const btnRow = document.createElement('div');
     btnRow.className = 'comp-btn-row';
 
-    const clearBtn  = this._btn('清除', 'btn-ghost', () => appStore.clearGrid(id));
-    const dupBtn    = this._btn('复制', 'btn-ghost', () => {
+    const clearBtn  = this._btn(t('panel.clear'), 'btn-ghost', () => appStore.clearGrid(id));
+    const dupBtn    = this._btn(t('panel.duplicate'), 'btn-ghost', () => {
       const newId = appStore.duplicateCompartment(id);
       this.el.dispatchEvent(new CustomEvent('compartment:duplicate', {
         detail: { newId, afterId: id }, bubbles: true,
       }));
     });
-    const deleteBtn = this._btn('删除', 'btn-danger', () => {
+    const deleteBtn = this._btn(t('panel.delete'), 'btn-danger', () => {
       this.el.dispatchEvent(new CustomEvent('compartment:remove', {
         detail: { id }, bubbles: true,
       }));
     });
-    const addBtn = this._btn('+ 新增', 'btn-primary', () => {
+    const addBtn = this._btn(t('panel.add'), 'btn-primary', () => {
       this.el.dispatchEvent(new CustomEvent('compartment:add', {
         detail: { afterId: id }, bubbles: true,
       }));
@@ -225,7 +283,7 @@ export class CompartmentPanel {
         const isActive = event.toId === this._id;
         this.el.classList.toggle('comp--playing', isActive);
         const statusEl = this.sidebar.querySelector<HTMLElement>(`[data-status-id="${this._id}"]`);
-        if (statusEl) statusEl.textContent = isActive ? '▶ 正在播放' : '';
+        if (statusEl) statusEl.textContent = isActive ? t('panel.playing') : '';
       } else if (event.type === 'PLAYBACK_STOPPED') {
         this.el.classList.remove('comp--playing');
         const statusEl = this.sidebar.querySelector<HTMLElement>(`[data-status-id="${this._id}"]`);

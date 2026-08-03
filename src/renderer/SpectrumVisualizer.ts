@@ -61,9 +61,16 @@ export class SpectrumVisualizer {
     const cssW = canvas.clientWidth;
     const cssH = canvas.clientHeight;
 
-    if (canvas.width !== cssW * dpr || canvas.height !== cssH * dpr) {
-      canvas.width  = cssW * dpr;
-      canvas.height = cssH * dpr;
+    if (cssW === 0 || cssH === 0) {
+      return; // Element is hidden, don't waste CPU/GPU rendering
+    }
+
+    const targetW = Math.floor(cssW * dpr);
+    const targetH = Math.floor(cssH * dpr);
+
+    if (canvas.width !== targetW || canvas.height !== targetH) {
+      canvas.width  = targetW;
+      canvas.height = targetH;
       ctx.scale(dpr, dpr);
     }
 

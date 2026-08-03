@@ -118,10 +118,13 @@ export class GridRenderer {
     const cssW = canvas.clientWidth;
     const cssH = canvas.clientHeight;
 
-    // Resize canvas if needed
-    if (canvas.width !== cssW * dpr || canvas.height !== cssH * dpr) {
-      canvas.width  = cssW * dpr;
-      canvas.height = cssH * dpr;
+    const targetW = Math.floor(cssW * dpr);
+    const targetH = Math.floor(cssH * dpr);
+
+    // Resize canvas if needed (use Math.floor to avoid infinite fractional resize loop on High DPI)
+    if (canvas.width !== targetW || canvas.height !== targetH) {
+      canvas.width  = targetW;
+      canvas.height = targetH;
       ctx.scale(dpr, dpr);
       this._recalcCellSize();
     }

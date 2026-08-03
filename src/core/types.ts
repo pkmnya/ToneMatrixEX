@@ -12,18 +12,7 @@ export const NOTE_RANGE_ROWS: Record<NoteRange, number> = {
   chromatic:  32,
 };
 
-export const NOTE_RANGE_LABELS: Record<NoteRange, string> = {
-  pentatonic: '五声音阶 (16行)',
-  diatonic:   '大调音阶 (24行)',
-  chromatic:  '半音阶 (32行)',
-};
-
-export const WAVE_TYPE_LABELS: Record<WaveType, string> = {
-  sine:     '正弦波',
-  sawtooth: '锯齿波',
-  square:   '方波',
-  triangle: '三角波',
-};
+// Labels are now handled via i18n: t('types.pentatonic'), etc.
 
 /** Per-compartment configuration — equivalent to C# GridGroup */
 export interface CompartmentConfig {

@@ -239,6 +239,17 @@ export class AppStore {
     this._activeCompartmentId = null;
     this.emit({ type: 'PROJECT_LOADED' });
   }
+
+  resetToDefault(): void {
+    const config = makeDefaultConfig(0);
+    const rows = NOTE_RANGE_ROWS[config.noteRange];
+    const defaultState: CompartmentState = {
+      config,
+      grid: makeDefaultGrid(config.width, rows),
+      currentColumn: -1,
+    };
+    this.loadProject([defaultState]);
+  }
 }
 
 // Singleton instance
