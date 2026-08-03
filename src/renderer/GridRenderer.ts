@@ -250,11 +250,28 @@ export class GridRenderer {
     this.canvas.removeEventListener('pointercancel',this._boundPointerUp);
   }
 
-  private _hitTest(e: PointerEvent): [number, number] | null {
+  private _hitTest(e: any): [number, number] | null {
     if (!this.state) return null;
     const rect = this.canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
+    
+    let clientX = e.clientX;
+    let clientY = e.clientY;
+
+    // Fallback for extreme Android WebView/Emulator cases where PointerEvent clientX is missing
+    if (clientX === undefined || (clientX === 0 && clientY === 0 && e.touches?.length > 0)) {
+      if (e.touches && e.touches.length > 0) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else if (e.changedTouches && e.changedTouches.length > 0) {
+        clientX = e.changedTouches[0].clientX;
+        clientY = e.changedTouches[0].clientY;
+      }
+    }
+    
+    if (clientX === undefined) return null;
+
+    const mx = clientX - rect.left;
+    const my = clientY - rect.top;
     const cs = this._cellSize;
     const cols = this.state.config.width;
     const rows = this.state.grid[0]?.length ?? 16;
@@ -262,7 +279,8 @@ export class GridRenderer {
     const col = Math.floor((mx - LABEL_WIDTH) / (cs + GAP));
     const row = Math.floor((my - HEADER_HEIGHT) / (cs + GAP));
 
-    if (col < 0 || col >= cols || row < 0 || row >= rows) return null;
+    // Fix NaN bounds logic (NaN >= 0 is false)
+    if (!(col >= 0 && col < cols && row >= 0 && row < rows)) return null;
     return [col, row];
   }
 

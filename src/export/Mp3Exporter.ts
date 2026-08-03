@@ -103,11 +103,8 @@ export class Mp3Exporter {
         envelope: { attack: 0.002, decay: 0.3, sustain: 0.05, release: 0.5 },
       });
 
-      // Highpass filter to cut low-end mud (same as live engine)
-      const filter = new Tone.Filter(130, 'highpass');
-      // EQ3: gentle low cut, high presence boost for chime brightness
-      const eq = new Tone.EQ3({ low: -4, mid: 0, high: 3 });
-      const vol = new Tone.Volume(Tone.gainToDb(config.volume));
+      // Simplified effects chain for mobile emulator stability
+      const vol = new Tone.Volume(Tone.gainToDb(config.volume)).toDestination();
 
       let fxNode: Tone.ToneAudioNode | null = null;
       if (config.fxType === 'pingpong') {
@@ -119,9 +116,9 @@ export class Mp3Exporter {
       }
 
       if (fxNode) {
-        polySynth.chain(filter, eq, fxNode, vol, Tone.getDestination());
+        polySynth.chain(fxNode, vol);
       } else {
-        polySynth.chain(filter, eq, vol, Tone.getDestination());
+        polySynth.connect(vol);
       }
       // ---- end mirror ----
 
@@ -139,7 +136,8 @@ export class Mp3Exporter {
         if (freqs.length > 0) {
           // Apply same polyphony volume normalization as live engine
           const polyVol = freqs.length > 1 ? Tone.gainToDb(1 / freqs.length) : 0;
-          polySynth.triggerAttackRelease(freqs, '16n', triggerTime, Math.pow(10, polyVol / 20));
+          // Use absolute stepSeconds instead of '16n' to guarantee correct duration regardless of Tone.Offline BPM bugs
+          polySynth.triggerAttackRelease(freqs, stepSeconds, triggerTime, Math.pow(10, polyVol / 20));
         }
       }
 
@@ -215,10 +213,13 @@ export class Mp3Exporter {
     }, 1000);
   }
 
-  private static _toOscType(w: string): OscillatorType {
-    const map: Record<string, OscillatorType> = {
-      sine: 'sine', sawtooth: 'sawtooth', square: 'square', triangle: 'triangle',
-    };
-    return map[w] ?? 'sine';
+  private static _toOscType(wt: WaveType): Tone.ToneOscillatorType {
+    switch (wt) {
+      case 'sine': return 'sine';
+      case 'sawtooth': return 'sawtooth';
+      case 'triangle': return 'triangle';
+      case 'square': return 'square';
+      default: return 'sine';
+    }
   }
 }

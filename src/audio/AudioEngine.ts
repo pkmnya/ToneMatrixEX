@@ -26,8 +26,6 @@ const NOTE_DURATION = '16n';
 interface SynthPool {
   polySynth: Tone.PolySynth;
   fxNode: Tone.ToneAudioNode | null;
-  eq: Tone.EQ3;
-  filter: Tone.Filter;
   vol: Tone.Volume;
   disposed: boolean;
 }
@@ -35,6 +33,25 @@ interface SynthPool {
 export class AudioEngine {
   private pools = new Map<string, SynthPool>();
   private _initialized = false;
+
+  constructor() {
+    // Attempt early unlock of Web Audio context on the first screen tap
+    // (Crucial for iOS Safari and some Android Emulators)
+    const unlock = () => {
+      if (!this._initialized) {
+        Tone.start().then(() => {
+          this._initialized = true;
+        }).catch(() => {});
+      }
+      document.removeEventListener('pointerdown', unlock);
+      document.removeEventListener('touchstart', unlock);
+      document.removeEventListener('click', unlock);
+    };
+    // Passive true is important so it doesn't block scrolling
+    document.addEventListener('pointerdown', unlock, { passive: true });
+    document.addEventListener('touchstart', unlock, { passive: true });
+    document.addEventListener('click', unlock, { passive: true });
+  }
 
   /** Must be called after a user gesture (browser requirement) */
   async init(): Promise<void> {
@@ -58,32 +75,26 @@ export class AudioEngine {
       envelope: { ...ADSR_DEFAULTS },
     });
 
-    // Effects chain (synchronous — no async IR like Reverb):
-    // polySynth → highpass filter (130Hz) → eq → [fxNode] → volume → destination
-    const filter = new Tone.Filter(130, 'highpass');
-    const eq = new Tone.EQ3({ low: -4, mid: 0, high: 3 });
-    const vol = new Tone.Volume(Tone.gainToDb(config.volume));
+    // Effects chain (simplified for mobile/emulator stability)
+    const vol = new Tone.Volume(Tone.gainToDb(config.volume)).toDestination();
 
     let fxNode: Tone.ToneAudioNode | null = null;
     
     if (config.fxType === 'pingpong') {
-      // delayTime: 8n, feedback scales from 0.0 to 0.6 based on fxLength
       fxNode = new Tone.PingPongDelay({ delayTime: '8n', feedback: config.fxLength * 0.6, wet: 0.15 + (config.fxLength * 0.1) });
     } else if (config.fxType === 'chorus') {
-      // chorus depth scales with fxLength, frequency fixed at 1.5Hz
       fxNode = new Tone.Chorus({ frequency: 1.5, delayTime: 3.5, depth: 0.5 + (config.fxLength * 0.5), wet: 0.5 }).start();
     } else if (config.fxType === 'freeverb') {
-      // roomSize scales with fxLength
       fxNode = new Tone.Freeverb({ roomSize: 0.4 + (config.fxLength * 0.5), dampening: 3000, wet: 0.4 });
     }
 
     if (fxNode) {
-      polySynth.chain(filter, eq, fxNode, vol, Tone.getDestination());
+      polySynth.chain(fxNode, vol);
     } else {
-      polySynth.chain(filter, eq, vol, Tone.getDestination());
+      polySynth.connect(vol);
     }
 
-    this.pools.set(config.id, { polySynth, fxNode, eq, filter, vol, disposed: false });
+    this.pools.set(config.id, { polySynth, fxNode, vol, disposed: false });
   }
 
   /** Update volume without recreating the pool */
@@ -101,8 +112,6 @@ export class AudioEngine {
       try {
         pool.polySynth.releaseAll();
         pool.polySynth.dispose();
-        pool.filter.dispose();
-        pool.eq.dispose();
         if (pool.fxNode) pool.fxNode.dispose();
         pool.vol.dispose();
       } catch (_) { /* ignore disposal errors */ }
@@ -176,14 +185,15 @@ export class AudioEngine {
 
   // ---- Helper ----
 
-  private _waveTypeToTone(w: WaveType): OscillatorType {
-    const map: Record<WaveType, OscillatorType> = {
-      sine: 'sine',
-      sawtooth: 'sawtooth',
-      square: 'square',
-      triangle: 'triangle',
-    };
-    return map[w];
+  private _waveTypeToTone(wt: WaveType): Tone.ToneOscillatorType {
+    // Standard waveforms are safer and more performant on mobile/emulators
+    switch (wt) {
+      case 'sine': return 'sine';
+      case 'sawtooth': return 'sawtooth';
+      case 'triangle': return 'triangle';
+      case 'square': return 'square';
+      default: return 'sine';
+    }
   }
 }
 
