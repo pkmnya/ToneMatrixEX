@@ -249,10 +249,10 @@ export class App {
         <div class="waline-header">
           <div style="display:flex; align-items:center;">
             <span class="status-dot"></span>
-            <span class="waline-title">社区分享 & 评论区</span>
+            <span class="waline-title">${t('app.walineTitle')}</span>
           </div>
           <div style="display:flex; align-items:center; gap: 8px;">
-            <button id="btn-my-history" class="btn-secondary" style="font-size: 11px; padding: 2px 6px;">🕒 我的历史</button>
+            <button id="btn-my-history" class="btn-secondary" style="font-size: 11px; padding: 2px 6px;">${t('app.myHistory')}</button>
           </div>
         </div>
         <div class="waline-body">
@@ -769,6 +769,12 @@ export class App {
     if (showcaseSamples) showcaseSamples.textContent = t('app.showcaseSamples');
     const showcaseMusic = this.root.querySelector('.showcase-music .showcase-col-title');
     if (showcaseMusic) showcaseMusic.textContent = t('app.showcaseMusic');
+
+    const walineTitle = this.root.querySelector('.waline-title');
+    if (walineTitle) walineTitle.textContent = t('app.walineTitle');
+    
+    const btnMyHistory = this.root.querySelector('#btn-my-history');
+    if (btnMyHistory) btnMyHistory.textContent = t('app.myHistory');
 
     // Reload description
     this._loadDescription();

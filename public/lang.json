@@ -36,7 +36,9 @@
       "codecApplySuccess": "✓ 成功从文本框加载项目编码！",
       "descTitle": "说明区",
       "spectrumTitle": "频谱分析",
-      "toggleTitle": "折叠/展开"
+      "toggleTitle": "折叠/展开",
+      "walineTitle": "社区分享 & 评论区",
+      "myHistory": "🕒 我的历史"
     },
     "panel": {
       "dragTitle": "拖动调整宽度",
@@ -105,7 +107,9 @@
       "codecApplySuccess": "✓ Project code loaded successfully!",
       "descTitle": "Description",
       "spectrumTitle": "Spectrum Analysis",
-      "toggleTitle": "Toggle"
+      "toggleTitle": "Toggle",
+      "walineTitle": "Community & Comments",
+      "myHistory": "🕒 My History"
     },
     "panel": {
       "dragTitle": "Drag to resize",

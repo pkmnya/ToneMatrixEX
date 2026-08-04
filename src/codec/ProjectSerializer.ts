@@ -13,6 +13,7 @@
 import type { CompartmentState, NoteRange, WaveType, FxType } from '../core/types';
 import { NOTE_RANGE_ROWS } from '../core/types';
 import { BitmapCodec } from './BitmapCodec';
+import { t } from '../core/i18n';
 
 const VERSION_PREFIX = 'TMX_v2';
 const SEP_OUTER = '|';
@@ -118,7 +119,7 @@ export class ProjectSerializer {
         states.push({
           config: {
             id: `comp-loaded-${i}`,
-            label: `组 #${i}`,
+            label: `${t('panel.label')} #${i}`,
             width,
             noteRange,
             bpm,

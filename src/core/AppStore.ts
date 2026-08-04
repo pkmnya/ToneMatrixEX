@@ -11,6 +11,7 @@ import type {
 } from './types';
 import { NOTE_RANGE_ROWS } from './types';
 import { MutableGridModel } from './GridModel';
+import { t } from './i18n';
 
 type Unsubscribe = () => void;
 type Handler = (event: AppEvent) => void;
@@ -27,7 +28,7 @@ function makeDefaultGrid(cols: number, rows: number): boolean[][] {
 function makeDefaultConfig(index: number): CompartmentConfig {
   return {
     id: genId(),
-    label: `组 #${index + 1}`,
+    label: `${t('panel.label')} #${index + 1}`,
     width: 16,
     noteRange: 'pentatonic',
     bpm: 120,
@@ -51,6 +52,7 @@ export class AppStore {
   constructor() {
     // Start with one default compartment
     this._addCompartmentInternal(makeDefaultConfig(0));
+    window.addEventListener('i18n-change', () => this.relabelAll());
   }
 
   // ---- Accessors ----
@@ -166,7 +168,11 @@ export class AppStore {
 
   relabelAll(): void {
     this._compartments.forEach((c, i) => {
-      c.config.label = `组 #${i + 1}`;
+      const newLabel = `${t('panel.label')} #${i + 1}`;
+      if (c.config.label !== newLabel) {
+        c.config.label = newLabel;
+        this.emit({ type: 'COMPARTMENT_CONFIG_CHANGED', compartmentId: c.config.id, changes: { label: newLabel } });
+      }
     });
   }
 

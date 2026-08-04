@@ -1,5 +1,9 @@
 # ToneMatrixEX 🎶
 
+<div align="center">
+  <img src="QQ20260805-034132.jpg" width="72%" alt="ToneMatrixEX">
+</div>
+
 > 一个受 André Michelle 的 **ToneMatrix** 启发的 Web Grid Sequencer。
 > 既可以随手玩旋律，也可以作为 Suno、Udio 等 AI 音乐工具的 Motif Generator。
 

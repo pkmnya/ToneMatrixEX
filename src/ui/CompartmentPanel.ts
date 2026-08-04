@@ -46,17 +46,11 @@ export class CompartmentPanel {
     const handle = this.el.querySelector('.comp-resize-handle') as HTMLElement;
     if (handle) handle.title = t('panel.dragTitle');
 
-    const labels = this.el.querySelectorAll('.comp-row > span:first-child');
-    if (labels.length >= 7) {
-      labels[0].textContent = t('panel.active');
-      labels[1].textContent = 'BPM';
-      labels[2].textContent = t('panel.columns');
-      labels[3].textContent = t('panel.scale');
-      labels[4].textContent = t('panel.wave');
-      labels[5].textContent = t('panel.fx');
-      labels[6].textContent = t('panel.fxLen');
-      labels[7].textContent = t('panel.volume');
-    }
+    const labels = this.el.querySelectorAll('span[data-i18n-panel]');
+    labels.forEach(l => {
+      const key = (l as HTMLElement).dataset.i18nPanel;
+      if (key) l.textContent = t(key);
+    });
 
     const clearBtn = this.el.querySelector('.comp-btn-row .btn-ghost:nth-child(1)');
     if (clearBtn) clearBtn.textContent = t('panel.clear');
@@ -149,7 +143,7 @@ export class CompartmentPanel {
     sb.appendChild(title);
 
     // Active toggle
-    sb.appendChild(this._row(t('panel.active'), this._toggle('active', cfg.isActive, (v) => {
+    sb.appendChild(this._row(t('panel.active'), 'panel.active', this._toggle('active', cfg.isActive, (v) => {
       appStore.updateConfig(id, { isActive: v });
       this.el.classList.toggle('comp--inactive', !v);
     })));
@@ -163,14 +157,14 @@ export class CompartmentPanel {
       bpmVal.textContent = String(v);
       appStore.updateConfig(id, { bpm: v });
     });
-    sb.appendChild(this._row('BPM', bpmSlider, bpmVal));
+    sb.appendChild(this._row('BPM', null, bpmSlider, bpmVal));
 
     // Columns (width) input
     const widthInput = this._numberInput('cols', 1, 64, cfg.width, (v) => {
       appStore.updateConfig(id, { width: v });
       this.renderer.markDirty();
     });
-    sb.appendChild(this._row(t('panel.columns'), widthInput));
+    sb.appendChild(this._row(t('panel.columns'), 'panel.columns', widthInput));
 
     // Note range select
     const noteRangeLabels: Record<NoteRange, string> = {
@@ -183,7 +177,7 @@ export class CompartmentPanel {
       audioEngine.createPool(appStore.getState(id)!.config);
       this.renderer.markDirty();
     });
-    sb.appendChild(this._row(t('panel.scale'), rangeSelect));
+    sb.appendChild(this._row(t('panel.scale'), 'panel.scale', rangeSelect));
 
     // Wave type select
     const waveTypeLabels: Record<WaveType, string> = {
@@ -197,7 +191,7 @@ export class CompartmentPanel {
       appStore.updateConfig(id, { waveType: v as any });
       audioEngine.createPool({ ...newCfg, waveType: v as any });
     });
-    sb.appendChild(this._row(t('panel.wave'), waveSelect));
+    sb.appendChild(this._row(t('panel.wave'), 'panel.wave', waveSelect));
 
     // FX type select
     const fxTypeLabels: Record<FxType, string> = {
@@ -211,7 +205,7 @@ export class CompartmentPanel {
       appStore.updateConfig(id, { fxType: v as any });
       audioEngine.createPool({ ...newCfg, fxType: v as any });
     });
-    sb.appendChild(this._row(t('panel.fx'), fxSelect));
+    sb.appendChild(this._row(t('panel.fx'), 'panel.fx', fxSelect));
 
     // FX Length slider
     const fxLenVal = document.createElement('span');
@@ -225,7 +219,7 @@ export class CompartmentPanel {
       appStore.updateConfig(id, { fxLength: len });
       audioEngine.createPool({ ...newCfg, fxLength: len });
     });
-    sb.appendChild(this._row(t('panel.fxLen'), fxLenSlider, fxLenVal));
+    sb.appendChild(this._row(t('panel.fxLen'), 'panel.fxLen', fxLenSlider, fxLenVal));
 
     // Volume slider
     const volVal = document.createElement('span');
@@ -238,7 +232,7 @@ export class CompartmentPanel {
       appStore.updateConfig(id, { volume: vol });
       audioEngine.setVolume(id, vol);
     });
-    sb.appendChild(this._row(t('panel.volume'), volSlider, volVal));
+    sb.appendChild(this._row(t('panel.volume'), 'panel.volume', volSlider, volVal));
 
     // --- Action buttons ---
     const btnRow = document.createElement('div');
@@ -379,14 +373,60 @@ export class CompartmentPanel {
 
   // ---- Widget helpers ----
 
-  private _row(label: string, ...controls: HTMLElement[]): HTMLElement {
-    const row = document.createElement('div');
-    row.className = 'comp-row';
-    const lbl = document.createElement('label');
-    lbl.className = 'comp-label';
-    lbl.textContent = label;
-    row.append(lbl, ...controls);
-    return row;
+  private _row(label: string, i18nKey: string | null, ...controls: HTMLElement[]): HTMLElement {
+    const r = document.createElement('div');
+    r.className = 'comp-row';
+    const l = document.createElement('span');
+    l.className = 'comp-label';
+    l.textContent = label;
+    if (i18nKey) l.dataset.i18nPanel = i18nKey;
+    r.append(l, ...controls);
+    return r;
+  }
+
+  private _updateTexts(): void {
+    const handle = this.el.querySelector('.comp-resize-handle') as HTMLElement;
+    if (handle) handle.title = t('panel.dragTitle');
+
+    const els = this.sidebar.querySelectorAll<HTMLElement>('[data-i18n-panel]');
+    els.forEach((el) => {
+      if (el.dataset.i18nPanel) {
+        el.textContent = t(el.dataset.i18nPanel);
+      }
+    });
+
+    const clearBtn = this.el.querySelector('.comp-btn-row .btn-ghost:nth-child(1)');
+    if (clearBtn) clearBtn.textContent = t('panel.clear');
+    const dupBtn = this.el.querySelector('.comp-btn-row .btn-ghost:nth-child(2)');
+    if (dupBtn) dupBtn.textContent = t('panel.duplicate');
+    const deleteBtn = this.el.querySelector('.comp-btn-row .btn-danger');
+    if (deleteBtn) deleteBtn.textContent = t('panel.delete');
+    const addBtn = this.el.querySelector('.comp-btn-row .btn-primary');
+    if (addBtn) addBtn.textContent = t('panel.add');
+
+    const statusEl = this.el.querySelector('.comp-status') as HTMLElement;
+    if (statusEl && statusEl.textContent) {
+      statusEl.textContent = t('panel.playing');
+    }
+
+    const noteSelect = this.el.querySelector('select[name="noteRange"]') as HTMLSelectElement;
+    if (noteSelect) {
+      Array.from(noteSelect.options).forEach(opt => {
+        opt.textContent = t('types.' + opt.value);
+      });
+    }
+    const waveSelect = this.el.querySelector('select[name="waveType"]') as HTMLSelectElement;
+    if (waveSelect) {
+      Array.from(waveSelect.options).forEach(opt => {
+        opt.textContent = t('types.' + opt.value);
+      });
+    }
+    const fxSelect = this.el.querySelector('select[name="fxType"]') as HTMLSelectElement;
+    if (fxSelect) {
+      Array.from(fxSelect.options).forEach(opt => {
+        opt.textContent = t('types.' + opt.value);
+      });
+    }
   }
 
   private _toggle(name: string, value: boolean, onChange: (v: boolean) => void): HTMLElement {
