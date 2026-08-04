@@ -23,7 +23,7 @@ import BitStream from 'lamejs/src/js/BitStream.js';
 // @ts-ignore
 import common from 'lamejs/src/js/common.js';
 import { rowToFrequency } from '../core/ScaleBuilder';
-import type { CompartmentState } from '../core/types';
+import type { CompartmentState, WaveType } from '../core/types';
 
 // Setup required globals for lamejs internal CommonJS scripts in Vite ESM bundle
 function setupLamejsGlobals(): void {
@@ -99,7 +99,7 @@ export class Mp3Exporter {
     const buffer = await Tone.Offline(({ transport }) => {
       // ---- Exactly mirrors AudioEngine.createPool() ----
       const polySynth = new Tone.PolySynth(Tone.Synth, {
-        oscillator: { type: this._toOscType(config.waveType) },
+        oscillator: { type: this._toOscType(config.waveType) as any },
         envelope: { attack: 0.002, decay: 0.3, sustain: 0.05, release: 0.5 },
       });
 

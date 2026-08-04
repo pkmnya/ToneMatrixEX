@@ -71,7 +71,7 @@ export class AudioEngine {
     const oscType = this._waveTypeToTone(config.waveType);
 
     const polySynth = new Tone.PolySynth(Tone.Synth, {
-      oscillator: { type: oscType },
+      oscillator: { type: oscType as any },
       envelope: { ...ADSR_DEFAULTS },
     });
 

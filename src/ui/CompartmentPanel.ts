@@ -42,50 +42,6 @@ export class CompartmentPanel {
     window.addEventListener('i18n-change', this._updateTexts);
   }
 
-  private _updateTexts(): void {
-    const handle = this.el.querySelector('.comp-resize-handle') as HTMLElement;
-    if (handle) handle.title = t('panel.dragTitle');
-
-    const labels = this.el.querySelectorAll('span[data-i18n-panel]');
-    labels.forEach(l => {
-      const key = (l as HTMLElement).dataset.i18nPanel;
-      if (key) l.textContent = t(key);
-    });
-
-    const clearBtn = this.el.querySelector('.comp-btn-row .btn-ghost:nth-child(1)');
-    if (clearBtn) clearBtn.textContent = t('panel.clear');
-    const dupBtn = this.el.querySelector('.comp-btn-row .btn-ghost:nth-child(2)');
-    if (dupBtn) dupBtn.textContent = t('panel.duplicate');
-    const deleteBtn = this.el.querySelector('.comp-btn-row .btn-danger');
-    if (deleteBtn) deleteBtn.textContent = t('panel.delete');
-    const addBtn = this.el.querySelector('.comp-btn-row .btn-primary');
-    if (addBtn) addBtn.textContent = t('panel.add');
-
-    const statusEl = this.el.querySelector('.comp-status') as HTMLElement;
-    if (statusEl && statusEl.textContent) {
-      statusEl.textContent = t('panel.playing');
-    }
-
-    const noteSelect = this.el.querySelector('select[name="noteRange"]') as HTMLSelectElement;
-    if (noteSelect) {
-      Array.from(noteSelect.options).forEach(opt => {
-        opt.textContent = t('types.' + opt.value);
-      });
-    }
-    const waveSelect = this.el.querySelector('select[name="waveType"]') as HTMLSelectElement;
-    if (waveSelect) {
-      Array.from(waveSelect.options).forEach(opt => {
-        opt.textContent = t('types.' + opt.value);
-      });
-    }
-    const fxSelect = this.el.querySelector('select[name="fxType"]') as HTMLSelectElement;
-    if (fxSelect) {
-      Array.from(fxSelect.options).forEach(opt => {
-        opt.textContent = t('types.' + opt.value);
-      });
-    }
-  }
-
   destroy(): void {
     this._unsubscribe?.();
     this.renderer.destroy();
