@@ -52,9 +52,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: Desktop-v__VERSION__
-          releaseName: 'ToneMatrixEX Desktop __VERSION__'
+          tagName: ${{ github.ref_name }}
+          releaseName: 'ToneMatrixEX Desktop ${{ github.ref_name }}'
           releaseBody: 'ToneMatrixEX 桌面离线纯净版 (Exe & DMG)。无需联网，双击即用，已自动排除自带参考音乐以减小包体。'
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
+
+      - name: Upload Portable Executable (Windows)
+        if: matrix.platform == 'windows-latest'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          Rename-Item -Path "src-tauri\target\release\ToneMatrixEX.exe" -NewName "ToneMatrixEX-Portable.exe"
+          gh release upload ${{ github.ref_name }} src-tauri\target\release\ToneMatrixEX-Portable.exe --clobber
