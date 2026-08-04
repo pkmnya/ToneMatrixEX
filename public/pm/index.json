@@ -1,12 +1,93 @@
 {
   "folders": [
     {
+      "name": "202506242",
+      "sample": "202506242/202506242.mp3",
+      "songs": [
+        {
+          "name": "202506242 (Remix) 丛林冒险",
+          "path": "202506242/202506242 (Remix) 丛林冒险.mp3"
+        }
+      ]
+    },
+    {
+      "name": "20250716",
+      "sample": "20250716/20250716.mp3",
+      "songs": [
+        {
+          "name": "恐怖1",
+          "path": "20250716/恐怖1.mp3"
+        },
+        {
+          "name": "恐怖2",
+          "path": "20250716/恐怖2.mp3"
+        },
+        {
+          "name": "节奏3",
+          "path": "20250716/节奏3.mp3"
+        }
+      ]
+    },
+    {
+      "name": "20251020",
+      "sample": "20251020/20251020.mp3",
+      "songs": [
+        {
+          "name": "20251020 (Cover) - tag 1",
+          "path": "20251020/20251020 (Cover) - tag 1.mp3"
+        }
+      ]
+    },
+    {
+      "name": "20251203-2",
+      "sample": "20251203-2/20251203-2.mp3",
+      "songs": []
+    },
+    {
       "name": "20251220",
       "sample": "20251220/20251220.mp3",
       "songs": [
         {
           "name": "20251220() tag m",
           "path": "20251220/20251220() tag m.mp3"
+        }
+      ]
+    },
+    {
+      "name": "20251220-3",
+      "sample": "20251220-3/20251220-3.mp3",
+      "songs": [
+        {
+          "name": "献祭之路初版",
+          "path": "20251220-3/献祭之路初版.mp3"
+        },
+        {
+          "name": "献祭之路女版",
+          "path": "20251220-3/献祭之路女版.mp3"
+        },
+        {
+          "name": "献祭之路男版",
+          "path": "20251220-3/献祭之路男版.mp3"
+        }
+      ]
+    },
+    {
+      "name": "20251222-3",
+      "sample": "20251222-3/20251222-3.mp3",
+      "songs": [
+        {
+          "name": "20251222-3 (Cover) unfinish (Cover) good",
+          "path": "20251222-3/20251222-3 (Cover) unfinish (Cover) good.mp3"
+        }
+      ]
+    },
+    {
+      "name": "20260123",
+      "sample": "20260123/20260123.mp3",
+      "songs": [
+        {
+          "name": "20260123 幻视",
+          "path": "20260123/20260123 幻视.mp3"
         }
       ]
     },
@@ -31,12 +112,74 @@
       ]
     },
     {
+      "name": "234",
+      "sample": "234/234.mp3",
+      "songs": [
+        {
+          "name": "234 (Remix)v1",
+          "path": "234/234 (Remix)v1.mp3"
+        },
+        {
+          "name": "234 (Remix)v2 西部风",
+          "path": "234/234 (Remix)v2 西部风.mp3"
+        },
+        {
+          "name": "234 (Remix)v2",
+          "path": "234/234 (Remix)v2.mp3"
+        }
+      ]
+    },
+    {
       "name": "common",
       "sample": null,
       "songs": [
         {
-          "name": "钟火回响",
-          "path": "common/钟火回响.mp3"
+          "name": "录音3_Add (Remix) 适合RPG大地图的BGM 适合雪山",
+          "path": "common/录音3_Add (Remix) 适合RPG大地图的BGM 适合雪山.mp3"
+        },
+        {
+          "name": "蝶恋 long 忧伤",
+          "path": "common/蝶恋 long 忧伤.mp3"
+        }
+      ]
+    },
+    {
+      "name": "录音",
+      "sample": "录音/录音.mp3",
+      "songs": [
+        {
+          "name": "录音 (Remix) 圣树战争",
+          "path": "录音/录音 (Remix) 圣树战争.mp3"
+        },
+        {
+          "name": "录音 (Remix) 森林 boss战",
+          "path": "录音/录音 (Remix) 森林 boss战.mp3"
+        },
+        {
+          "name": "录音 (Remix) 森林",
+          "path": "录音/录音 (Remix) 森林.mp3"
+        },
+        {
+          "name": "录音 (Remix) 森林旁繁荣的巨大城镇",
+          "path": "录音/录音 (Remix) 森林旁繁荣的巨大城镇.mp3"
+        },
+        {
+          "name": "录音 (Remix) 森林的离别_CUT",
+          "path": "录音/录音 (Remix) 森林的离别_CUT.mp3"
+        },
+        {
+          "name": "录音 (Remix) 热闹的酒馆_CUT",
+          "path": "录音/录音 (Remix) 热闹的酒馆_CUT.mp3"
+        }
+      ]
+    },
+    {
+      "name": "测试2",
+      "sample": "测试2/测试2.mp3",
+      "songs": [
+        {
+          "name": "测试~2 丢失wav原件",
+          "path": "测试2/测试~2 丢失wav原件.mp3"
         }
       ]
     }

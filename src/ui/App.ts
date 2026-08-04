@@ -393,7 +393,7 @@ export class App {
     section.innerHTML = `
       <div class="showcase-header">
         <div style="display:flex; align-items:center;">
-          <span class="status-dot" style="background: #a855f7; box-shadow: 0 0 8px rgba(168, 85, 247, 0.4);"></span>
+          <span class="status-dot"></span>
           <span class="showcase-title">${t('app.showcaseTitle')}</span>
         </div>
       </div>

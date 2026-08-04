@@ -711,6 +711,7 @@ html, body {
 .codec-section--collapsed .status-dot,
 .desc-section--collapsed .status-dot,
 .spectrum-section--collapsed .status-dot,
+.showcase-section--collapsed .status-dot,
 .waline-section--collapsed .status-dot {
   background: #ef4444;
   box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
@@ -1182,7 +1183,7 @@ button, input, select, .toggle, .comp-btn, .toolbar-btn {
 
 /* ---- Showcase Section ---- */
 .showcase-section {
-  background: var(--bg-panel);
+  background: var(--bg-surface);
   border-top: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -1195,6 +1196,7 @@ button, input, select, .toggle, .comp-btn, .toolbar-btn {
   padding: 0 16px;
   height: 32px;
   border-bottom: 1px solid var(--border);
+  cursor: pointer;
 }
 
 .showcase-title {
