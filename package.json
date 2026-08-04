@@ -6,11 +6,15 @@
   "scripts": {
     "dev": "vite --host",
     "build": "tsc && vite build",
+    "build:desktop": "node -e \"const fs=require('fs'); fs.rmSync('public/pm', {recursive:true, force:true})\" && cross-env OFFLINE_BUILD=true tsc && vite build",
+    "tauri": "tauri",
     "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^2.11.4",
+    "cross-env": "^10.1.0",
     "gh-pages": "^6.3.0",
     "typescript": "~6.0.2",
     "vite": "^8.1.1"
