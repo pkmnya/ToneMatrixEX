@@ -65,5 +65,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          Rename-Item -Path "src-tauri\target\release\ToneMatrixEX.exe" -NewName "ToneMatrixEX-Portable.exe"
+          Rename-Item -Path "src-tauri\target\release\app.exe" -NewName "ToneMatrixEX-Portable.exe"
           gh release upload ${{ github.ref_name }} src-tauri\target\release\ToneMatrixEX-Portable.exe --clobber
