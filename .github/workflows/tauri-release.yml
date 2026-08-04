@@ -1,13 +1,59 @@
 name: Build and Release Desktop App (Tauri)
 
 on:
-  push:
-    tags:
-      - 'v*' # Trigger when a tag is pushed, e.g. v1.0.0
+  schedule:
+    - cron: '0 18 * * *' # 每天北京时间凌晨 2 点 (UTC 18:00) 自动检查
   workflow_dispatch:
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      should_build: ${{ steps.check.outputs.should_build }}
+      tag_name: ${{ steps.tag.outputs.tag_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 需要获取完整历史，以便判断 24 小时内的 commit
+
+      - name: Check for meaningful changes in the last 24 hours
+        id: check
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "Manual trigger, will build."
+            echo "should_build=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          COMMITS=$(git log --since="24 hours" --format="%H")
+          if [ -z "$COMMITS" ]; then
+            echo "No commits in the last 24 hours."
+            echo "should_build=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # 获取 24 小时内变更的文件列表
+          CHANGED_FILES=$(git log --since="24 hours" --name-only --oneline | grep -v '^[a-f0-9]\{7,\} ' | sort | uniq | grep -v '^$')
+          
+          # 过滤掉依赖和配置文件，检查是否有实质性代码变更
+          NON_DEP_CHANGES=$(echo "$CHANGED_FILES" | grep -v -E '^(package\.json|package-lock\.json|src-tauri/Cargo\.toml|src-tauri/Cargo\.lock|\.github/.*)$' || true)
+          
+          if [ -n "$NON_DEP_CHANGES" ]; then
+            echo "Meaningful changes detected:"
+            echo "$NON_DEP_CHANGES"
+            echo "should_build=true" >> $GITHUB_OUTPUT
+          else
+            echo "Only dependency or workflow changes detected. Skipping."
+            echo "should_build=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate Tag Name
+        id: tag
+        run: echo "tag_name=v$(date +'%Y.%m.%d')" >> $GITHUB_OUTPUT
+
   release:
+    needs: check
+    if: needs.check.outputs.should_build == 'true'
     permissions:
       contents: write
     strategy:
@@ -53,9 +99,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: 'ToneMatrixEX Desktop ${{ github.ref_name }}'
-          releaseBody: 'ToneMatrixEX 桌面离线纯净版 (Exe & DMG)。无需联网，双击即用，已自动排除自带参考音乐以减小包体。'
+          tagName: ${{ needs.check.outputs.tag_name }}
+          releaseName: 'ToneMatrixEX Desktop ${{ needs.check.outputs.tag_name }} (Daily)'
+          releaseBody: 'ToneMatrixEX 桌面离线纯净版 (每日自动构建)。'
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
@@ -66,4 +112,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           Rename-Item -Path "src-tauri\target\release\app.exe" -NewName "ToneMatrixEX-Portable.exe"
-          gh release upload ${{ github.ref_name }} src-tauri\target\release\ToneMatrixEX-Portable.exe --clobber
+          gh release upload ${{ needs.check.outputs.tag_name }} src-tauri\target\release\ToneMatrixEX-Portable.exe --clobber
