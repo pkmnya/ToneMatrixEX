@@ -54,10 +54,11 @@ function generatePmIndexPlugin() {
 // 部署到 GitHub Pages 时需要填入正确的仓库名
 // 本地开发时保持 '/' 即可
 const isGitHubPages = process.env.GITHUB_PAGES === 'true'
+const isOffline = process.env.OFFLINE_BUILD === 'true'
 
 export default defineConfig({
   plugins: [generatePmIndexPlugin()],
-  base: isGitHubPages ? '/ToneMatrixEX/' : '/',
+  base: isGitHubPages ? '/ToneMatrixEX/' : (isOffline ? './' : '/'),
   build: {
     outDir: 'dist',
     sourcemap: false,

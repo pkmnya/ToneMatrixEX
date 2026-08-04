@@ -1,0 +1,55 @@
+name: Build and Release Offline Version
+
+on:
+  push:
+    tags:
+      - 'v*' # Automatically trigger when you push a tag like v1.0.0
+  workflow_dispatch: # Allows manual trigger from the Actions tab
+
+permissions:
+  contents: write # Required for creating releases
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Remove local music folder
+        run: rm -rf public/pm
+        
+      - name: Build project (Offline Mode)
+        env:
+          OFFLINE_BUILD: true
+        run: npm run build
+        
+      - name: Create Zip Archive
+        run: |
+          cd dist
+          zip -r ../ToneMatrixEX-Offline.zip ./*
+          
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: ToneMatrixEX Offline Version ${{ github.ref_name }}
+          files: ToneMatrixEX-Offline.zip
+          body: |
+            此版本为**纯净离线版**，已排除内置的演示音乐文件以减小体积。
+            
+            **使用方法**：
+            1. 下载 `ToneMatrixEX-Offline.zip` 并解压。
+            2. 如果您的浏览器允许跨域（或者您禁用了本地文件跨域限制），可以直接双击打开 `index.html`。
+            3. 如果直接打开出现白屏或加载失败，请在文件夹中启动一个简单的本地服务器，例如：
+               - Node.js环境: `npx serve`
+               - Python环境: `python -m http.server`
+               - 或者使用 VSCode 的 Live Server 插件打开。
