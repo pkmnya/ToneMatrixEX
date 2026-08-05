@@ -61,7 +61,7 @@ jobs:
       matrix:
         include:
           - platform: 'windows-latest'
-            args: '--no-bundle'
+            args: '--bundles nsis'
           - platform: 'macos-latest'
             args: '--bundles app'
           - platform: 'ubuntu-22.04'
@@ -98,23 +98,7 @@ jobs:
         shell: bash
         run: rm -rf public/pm
 
-      - name: Build Tauri App (Windows Portable)
-        if: matrix.platform == 'windows-latest'
-        run: npx tauri build --no-bundle
-
-      - name: Upload Portable Executable (Windows)
-        if: matrix.platform == 'windows-latest'
-        uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ needs.check.outputs.tag_name }}
-          name: 'ToneMatrixEX Desktop ${{ needs.check.outputs.tag_name }} (Daily)'
-          body: 'ToneMatrixEX 桌面离线纯净版 (每日自动构建)。'
-          files: src-tauri/target/release/app.exe
-        
-      - name: Build Tauri App (Mac/Ubuntu)
-        if: matrix.platform != 'windows-latest'
+      - name: Build Tauri App
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -125,3 +109,11 @@ jobs:
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
+
+      - name: Upload Portable Executable (Windows)
+        if: matrix.platform == 'windows-latest'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          Rename-Item -Path "src-tauri\target\release\app.exe" -NewName "ToneMatrixEX-Portable.exe"
+          gh release upload ${{ needs.check.outputs.tag_name }} src-tauri\target\release\ToneMatrixEX-Portable.exe --clobber
