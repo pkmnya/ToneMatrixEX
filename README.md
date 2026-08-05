@@ -1,5 +1,7 @@
 # ToneMatrixEX 🎶
 
+[🇬🇧 Skip to English Version](#english-version)
+
 <div align="center">
   <img src="QQ20260805-034132.jpg" width="72%" alt="ToneMatrixEX">
 </div>
@@ -101,3 +103,110 @@ npm run build
 本项目采用 **GPL-3.0** 协议开源。
 
 你可以自由使用、修改和分发本项目，但任何基于本项目修改后的版本，同样需要以 GPL 协议开源。
+
+<br>
+<br>
+
+---
+
+<h1 id="english-version">ToneMatrixEX 🎶</h1>
+
+[🇨🇳 返回中文版本](#tonematrixex-)
+
+> A Web Grid Sequencer inspired by André Michelle's **ToneMatrix**.
+> It can be used both to casually play with melodies, and as a Motif Generator for AI music tools like Suno and Udio.
+
+---
+
+## About The Project
+
+Initially, ToneMatrixEX was just meant to recreate the fun of ToneMatrix where you "hear a melody with just a few clicks." However, it slowly evolved into a handy tool that is more suited for modern AI music creation.
+
+Often, feeding text prompts directly into AI results in rather random melodies and rhythms. If you first use ToneMatrixEX to quickly draw a simple Motif and export the audio as a reference input, you can provide the AI with a much clearer rhythmic and melodic direction.
+
+It is not a DAW, nor is it professional arrangement software. Rather, it is a tool suitable for quickly recording inspirations and generating melody seeds.
+
+> Parts of this project were written with the assistance of Gemini.
+
+---
+
+## Features
+
+* 🎵 Built on **Tone.js** with stable audio scheduling and diverse synthesizer patches.
+* 💾 Built-in **MP3 Export** (lamejs), convenient for direct use in AI workflows.
+* 💬 Integrated **Waline commenting system** for easy communication and sharing of creations.
+* ⚡ Built with **Vite + TypeScript** for a smooth and simple development experience.
+
+---
+
+## A Rather Interesting Way to Play
+
+A workflow that I personally use quite often:
+
+```
+ToneMatrixEX
+        │
+        ├── Draw a simple Motif
+        │
+        ├── Export MP3
+        │
+        ▼
+Suno / Udio
+        │
+        ▼
+AI expands into full arrangement
+```
+
+Many times, a melody of just a few seconds is enough to serve as the starting point for an entire song.
+
+Different Prompts can evolve the exact same Motif into completely different styles, for example:
+
+* EDM / Future Bass
+* Kawaii Bass
+* Lo-fi Hip Hop
+* Cinematic Horror
+* Epic Orchestral
+* Synthwave
+* Ambient
+
+Even though the underlying melody is the same, the AI will often provide drastically different arrangements and atmospheres.
+
+---
+
+## Local Development
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+Build for production:
+
+```bash
+npm run build
+```
+
+---
+
+## Tech Stack
+
+* Vite
+* TypeScript
+* Tone.js
+* lamejs
+* Waline
+
+---
+
+## License
+
+This project is open-sourced under the **GPL-3.0** license.
+
+You are free to use, modify, and distribute this project, but any modified versions based on this project must also be open-sourced under the GPL license.
