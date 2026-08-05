@@ -65,10 +65,15 @@
       "sawtooth": "锯齿波",
       "square": "方波",
       "triangle": "三角波",
+      "piano": "钢琴",
       "none": "无 (None)",
-      "pingpong": "回声 (Echo)",
+      "pingpong": "回声 (PingPong)",
       "chorus": "合唱 (Chorus)",
-      "freeverb": "混响 (Reverb)"
+      "freeverb": "混响 (Freeverb)",
+      "autofilter": "哇音 (AutoFilter)",
+      "bitcrusher": "像素碎音 (BitCrusher)",
+      "phaser": "相位偏移 (Phaser)",
+      "tremolo": "颤音切片 (Tremolo)"
     }
   },
   "en": {
@@ -137,10 +142,15 @@
       "sawtooth": "Sawtooth",
       "square": "Square",
       "triangle": "Triangle",
+      "piano": "Piano",
       "none": "None",
-      "pingpong": "Echo",
+      "pingpong": "Echo (PingPong)",
       "chorus": "Chorus",
-      "freeverb": "Reverb"
+      "freeverb": "Reverb (Freeverb)",
+      "autofilter": "Wah-wah (AutoFilter)",
+      "bitcrusher": "8-bit (BitCrusher)",
+      "phaser": "Phaser",
+      "tremolo": "Tremolo"
     }
   }
 }

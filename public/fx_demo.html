@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FX Test - ToneMatrixEX</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+  <style>
+    body { font-family: sans-serif; background: #1a1a2e; color: #fff; text-align: center; padding: 50px; }
+    h1 { color: #00d2ff; }
+    p { margin-bottom: 30px; color: #8892b0; }
+    .btn {
+      background: #0f3460; color: #fff; border: 2px solid #e94560; border-radius: 8px;
+      padding: 15px 25px; margin: 10px; font-size: 16px; cursor: pointer; transition: 0.3s;
+    }
+    .btn:hover { background: #e94560; }
+    .btn:active { transform: scale(0.95); }
+    .grid { display: flex; flex-wrap: wrap; justify-content: center; max-width: 800px; margin: 0 auto; }
+  </style>
+</head>
+<body>
+  <h1>后期效果 (FX) 试听室</h1>
+  <p>点击下方按钮，试听同一段旋律在不同【拉满状态】效果器下的表现</p>
+  
+  <div class="grid">
+    <button class="btn" onclick="playFX('dry')">0. 纯干声 (无效果)</button>
+    <button class="btn" onclick="playFX('reverb')">1. 调整后的混响 (Freeverb)</button>
+    <button class="btn" onclick="playFX('chorus')">2. 调整后的合唱 (Chorus)</button>
+    <button class="btn" onclick="playFX('autofilter')">3. 哇音滤波 (AutoFilter)</button>
+    <button class="btn" onclick="playFX('bitcrusher')">4. 像素位碎 (BitCrusher)</button>
+    <button class="btn" onclick="playFX('phaser')">5. 相位偏移 (Phaser)</button>
+    <button class="btn" onclick="playFX('tremolo')">6. 颤音切片 (Tremolo)</button>
+  </div>
+
+  <script>
+    let synth = null;
+    let currentFx = null;
+    let isInitialized = false;
+
+    async function init() {
+      if (!isInitialized) {
+        await Tone.start();
+        isInitialized = true;
+      }
+    }
+
+    function cleanup() {
+      if (synth) {
+        synth.releaseAll();
+        synth.dispose();
+      }
+      if (currentFx) {
+        currentFx.dispose();
+      }
+    }
+
+    async function playFX(type) {
+      await init();
+      cleanup();
+
+      // 创建一个自带延音的合成器，以便清楚听到尾音
+      synth = new Tone.PolySynth(Tone.Synth, {
+        oscillator: { type: 'sawtooth' },
+        envelope: { attack: 0.01, decay: 0.2, sustain: 0.2, release: 1.5 }
+      });
+      
+      const vol = new Tone.Volume(-6).toDestination();
+
+      // 根据类型挂载效果器 (全部模拟拉满状态 100%)
+      if (type === 'dry') {
+        synth.connect(vol);
+      } else {
+        switch (type) {
+          case 'reverb':
+            // 调整后的混响：极大的空间感和明显的湿声
+            currentFx = new Tone.Freeverb({ roomSize: 0.98, dampening: 3000, wet: 0.7 });
+            break;
+          case 'chorus':
+            // 调整后的合唱：带一点空间拉扯感
+            currentFx = new Tone.Chorus({ frequency: 2, delayTime: 4, depth: 1, wet: 0.5 }).start();
+            break;
+          case 'autofilter':
+            // 哇音滤波：LFO 控制滤波频率扫频
+            currentFx = new Tone.AutoFilter({ frequency: "4n", baseFrequency: 200, octaves: 4, wet: 1 }).start();
+            break;
+          case 'bitcrusher':
+            // 像素碎音：8-bit 经典声音
+            currentFx = new Tone.BitCrusher({ bits: 4, wet: 1 });
+            break;
+          case 'phaser':
+            // 相位偏移：迷幻的旋转声
+            currentFx = new Tone.Phaser({ frequency: 0.5, octaves: 3, baseFrequency: 300, wet: 0.8 });
+            break;
+          case 'tremolo':
+            // 颤音切片：极速的音量切碎
+            currentFx = new Tone.Tremolo({ frequency: 8, type: 'square', depth: 1, wet: 1 }).start();
+            break;
+        }
+        synth.chain(currentFx, vol);
+      }
+
+      // 弹奏一段简单的和弦与琶音，方便感受尾音和空间感
+      const now = Tone.now();
+      synth.triggerAttackRelease(["C4", "E4", "G4"], "8n", now);
+      synth.triggerAttackRelease("C5", "4n", now + 0.5);
+    }
+  </script>
+</body>
+</html>

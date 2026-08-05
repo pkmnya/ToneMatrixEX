@@ -59,9 +59,13 @@ export function noteToFrequency(noteName: string): number {
 
 /** Returns the frequency (Hz) for grid row `row` with the given scale */
 export function rowToFrequency(range: NoteRange, row: number): number {
+  return noteToFrequency(rowToNoteName(range, row));
+}
+
+/** Returns the note name (e.g., 'C4') for grid row `row` */
+export function rowToNoteName(range: NoteRange, row: number): string {
   const notes = getScaleNotes(range);
-  const name = notes[row] ?? notes[notes.length - 1];
-  return noteToFrequency(name);
+  return notes[row] ?? notes[notes.length - 1];
 }
 
 /** Returns a short display label for a row (used on grid Y-axis labels) */

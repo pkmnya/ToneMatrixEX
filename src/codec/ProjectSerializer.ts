@@ -20,7 +20,7 @@ const SEP_OUTER = '|';
 const SEP_INNER = ',';
 
 type NoteRangeCode = '0' | '1' | '2';
-type WaveTypeCode  = '0' | '1' | '2' | '3';
+type WaveTypeCode  = '0' | '1' | '2' | '3' | '4';
 
 const NOTE_RANGE_TO_CODE: Record<NoteRange, NoteRangeCode> = {
   pentatonic: '0',
@@ -38,26 +38,36 @@ const WAVE_TYPE_TO_CODE: Record<WaveType, WaveTypeCode> = {
   sawtooth: '1',
   square:   '2',
   triangle: '3',
+  piano:    '4',
 };
 const CODE_TO_WAVE_TYPE: Record<string, WaveType> = {
   '0': 'sine',
   '1': 'sawtooth',
   '2': 'square',
   '3': 'triangle',
+  '4': 'piano',
 };
 
-type FxTypeCode = '0' | '1' | '2' | '3';
+type FxTypeCode = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7';
 const FX_TYPE_TO_CODE: Record<FxType, FxTypeCode> = {
   none: '0',
   pingpong: '1',
   chorus: '2',
   freeverb: '3',
+  autofilter: '4',
+  bitcrusher: '5',
+  phaser: '6',
+  tremolo: '7',
 };
 const CODE_TO_FX_TYPE: Record<string, FxType> = {
   '0': 'none',
   '1': 'pingpong',
   '2': 'chorus',
   '3': 'freeverb',
+  '4': 'autofilter',
+  '5': 'bitcrusher',
+  '6': 'phaser',
+  '7': 'tremolo',
 };
 
 export class ProjectSerializer {

@@ -3,8 +3,8 @@
 // ============================================================
 
 export type NoteRange = 'pentatonic' | 'diatonic' | 'chromatic';
-export type WaveType = 'sine' | 'sawtooth' | 'square' | 'triangle';
-export type FxType = 'none' | 'pingpong' | 'chorus' | 'freeverb';
+export type WaveType = 'sine' | 'sawtooth' | 'square' | 'triangle' | 'piano';
+export type FxType = 'none' | 'pingpong' | 'chorus' | 'freeverb' | 'autofilter' | 'bitcrusher' | 'phaser' | 'tremolo';
 
 /** Rows per note range — direct port from C# NoteRange enum */
 export const NOTE_RANGE_ROWS: Record<NoteRange, number> = {

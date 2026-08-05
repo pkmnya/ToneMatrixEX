@@ -141,6 +141,7 @@ export class CompartmentPanel {
       sawtooth: t('types.sawtooth'),
       square: t('types.square'),
       triangle: t('types.triangle'),
+      piano: t('types.piano'),
     };
     const waveSelect = this._select('waveType', waveTypeLabels, cfg.waveType, (v) => {
       const newCfg = appStore.getState(id)!.config;
@@ -155,6 +156,10 @@ export class CompartmentPanel {
       pingpong: t('types.pingpong'),
       chorus: t('types.chorus'),
       freeverb: t('types.freeverb'),
+      autofilter: t('types.autofilter'),
+      bitcrusher: t('types.bitcrusher'),
+      phaser: t('types.phaser'),
+      tremolo: t('types.tremolo'),
     };
     const fxSelect = this._select('fxType', fxTypeLabels, cfg.fxType, (v) => {
       const newCfg = appStore.getState(id)!.config;

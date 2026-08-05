@@ -9,7 +9,7 @@
  */
 
 import * as Tone from 'tone';
-import { rowToFrequency } from '../core/ScaleBuilder';
+import { rowToFrequency, rowToNoteName } from '../core/ScaleBuilder';
 import type { CompartmentConfig, NoteRange, WaveType, FxType } from '../core/types';
 
 // ---- ADSR defaults (optimized for percussive mallet/chime ToneMatrix sound) ----
@@ -24,7 +24,7 @@ const ADSR_DEFAULTS = {
 const NOTE_DURATION = '16n';
 
 interface SynthPool {
-  polySynth: Tone.PolySynth;
+  synthNode: Tone.PolySynth | Tone.Sampler;
   fxNode: Tone.ToneAudioNode | null;
   vol: Tone.Volume;
   disposed: boolean;
@@ -68,12 +68,36 @@ export class AudioEngine {
   createPool(config: CompartmentConfig): void {
     this.disposePool(config.id);
 
-    const oscType = this._waveTypeToTone(config.waveType);
+    let synthNode: Tone.PolySynth | Tone.Sampler;
 
-    const polySynth = new Tone.PolySynth(Tone.Synth, {
-      oscillator: { type: oscType as any },
-      envelope: { ...ADSR_DEFAULTS },
-    });
+    if (config.waveType === 'piano') {
+      synthNode = new Tone.Sampler({
+        urls: {
+          A0: "A0.mp3",
+          C1: "C1.mp3",
+          A1: "A1.mp3",
+          C2: "C2.mp3",
+          A2: "A2.mp3",
+          C3: "C3.mp3",
+          A3: "A3.mp3",
+          C4: "C4.mp3",
+          A4: "A4.mp3",
+          C5: "C5.mp3",
+          A5: "A5.mp3",
+          C6: "C6.mp3",
+          A6: "A6.mp3",
+          C7: "C7.mp3",
+          A7: "A7.mp3",
+        },
+        baseUrl: "https://tonejs.github.io/audio/salamander/",
+      });
+    } else {
+      const oscType = this._waveTypeToTone(config.waveType);
+      synthNode = new Tone.PolySynth(Tone.Synth, {
+        oscillator: { type: oscType as any },
+        envelope: { ...ADSR_DEFAULTS },
+      });
+    }
 
     // Effects chain (simplified for mobile/emulator stability)
     const vol = new Tone.Volume(Tone.gainToDb(config.volume)).toDestination();
@@ -81,20 +105,29 @@ export class AudioEngine {
     let fxNode: Tone.ToneAudioNode | null = null;
     
     if (config.fxType === 'pingpong') {
-      fxNode = new Tone.PingPongDelay({ delayTime: '8n', feedback: config.fxLength * 0.6, wet: 0.15 + (config.fxLength * 0.1) });
+      fxNode = new Tone.PingPongDelay({ delayTime: '8n', feedback: config.fxLength * 0.85, wet: 0.2 + (config.fxLength * 0.3) });
     } else if (config.fxType === 'chorus') {
-      fxNode = new Tone.Chorus({ frequency: 1.5, delayTime: 3.5, depth: 0.5 + (config.fxLength * 0.5), wet: 0.5 }).start();
+      fxNode = new Tone.Chorus({ frequency: 2, delayTime: 4, depth: 0.5 + (config.fxLength * 0.5), feedback: config.fxLength * 0.5, wet: 0.5 }).start();
     } else if (config.fxType === 'freeverb') {
-      fxNode = new Tone.Freeverb({ roomSize: 0.4 + (config.fxLength * 0.5), dampening: 3000, wet: 0.4 });
+      fxNode = new Tone.Freeverb({ roomSize: 0.5 + (config.fxLength * 0.48), dampening: 3000, wet: 0.3 + (config.fxLength * 0.4) });
+    } else if (config.fxType === 'autofilter') {
+      fxNode = new Tone.AutoFilter({ frequency: "4n", baseFrequency: 200, octaves: 2 + (config.fxLength * 3), depth: 0.2 + (config.fxLength * 0.8), wet: 0.5 + (config.fxLength * 0.5) }).start();
+    } else if (config.fxType === 'bitcrusher') {
+      const bits = Math.max(1, Math.round(8 - (config.fxLength * 7)));
+      fxNode = new Tone.BitCrusher({ bits: bits, wet: 0.5 + (config.fxLength * 0.5) });
+    } else if (config.fxType === 'phaser') {
+      fxNode = new Tone.Phaser({ frequency: 0.2 + (config.fxLength * 1.8), octaves: 3, baseFrequency: 300, wet: 0.4 + (config.fxLength * 0.4) });
+    } else if (config.fxType === 'tremolo') {
+      fxNode = new Tone.Tremolo({ frequency: 8, type: 'square', depth: 0.2 + (config.fxLength * 0.8), wet: 1.0 }).start();
     }
 
     if (fxNode) {
-      polySynth.chain(fxNode, vol);
+      synthNode.chain(fxNode, vol);
     } else {
-      polySynth.connect(vol);
+      synthNode.connect(vol);
     }
 
-    this.pools.set(config.id, { polySynth, fxNode, vol, disposed: false });
+    this.pools.set(config.id, { synthNode, fxNode, vol, disposed: false });
   }
 
   /** Update volume without recreating the pool */
@@ -110,8 +143,12 @@ export class AudioEngine {
     if (pool && !pool.disposed) {
       pool.disposed = true;
       try {
-        pool.polySynth.releaseAll();
-        pool.polySynth.dispose();
+        if (pool.synthNode instanceof Tone.PolySynth) {
+          pool.synthNode.releaseAll();
+        } else if (pool.synthNode instanceof Tone.Sampler) {
+          pool.synthNode.releaseAll();
+        }
+        pool.synthNode.dispose();
         if (pool.fxNode) pool.fxNode.dispose();
         pool.vol.dispose();
       } catch (_) { /* ignore disposal errors */ }
@@ -140,11 +177,15 @@ export class AudioEngine {
     if (!pool || pool.disposed) return;
 
     const rows = grid[col]?.length ?? 0;
-    const freqs: number[] = [];
+    const freqs: (number | string)[] = [];
 
     for (let row = 0; row < rows; row++) {
       if (grid[col][row]) {
-        freqs.push(rowToFrequency(noteRange, row));
+        if (pool.synthNode instanceof Tone.Sampler) {
+          freqs.push(rowToNoteName(noteRange, row));
+        } else {
+          freqs.push(rowToFrequency(noteRange, row));
+        }
       }
     }
 
@@ -155,9 +196,9 @@ export class AudioEngine {
 
     try {
       if (time !== undefined) {
-        pool.polySynth.triggerAttackRelease(freqs, NOTE_DURATION, time, Math.pow(10, polyVol / 20));
+        pool.synthNode.triggerAttackRelease(freqs, NOTE_DURATION, time, Math.pow(10, polyVol / 20));
       } else {
-        pool.polySynth.triggerAttackRelease(freqs, NOTE_DURATION);
+        pool.synthNode.triggerAttackRelease(freqs, NOTE_DURATION);
       }
     } catch (_) { /* audio context not ready */ }
   }
@@ -169,16 +210,21 @@ export class AudioEngine {
   testNote(compartmentId: string, row: number, noteRange: NoteRange): void {
     const pool = this.pools.get(compartmentId);
     if (!pool || pool.disposed) return;
-    const freq = rowToFrequency(noteRange, row);
+    const freq = pool.synthNode instanceof Tone.Sampler 
+      ? rowToNoteName(noteRange, row)
+      : rowToFrequency(noteRange, row);
     try {
-      pool.polySynth.triggerAttackRelease(freq, NOTE_DURATION, Tone.now());
+      pool.synthNode.triggerAttackRelease(freq, NOTE_DURATION, Tone.now());
     } catch (_) { /* ignore */ }
   }
 
   silenceAll(): void {
     for (const pool of this.pools.values()) {
       if (!pool.disposed) {
-        try { pool.polySynth.releaseAll(); } catch (_) { /* ignore */ }
+        try { 
+          if (pool.synthNode instanceof Tone.PolySynth) pool.synthNode.releaseAll(); 
+          else if (pool.synthNode instanceof Tone.Sampler) pool.synthNode.releaseAll(); 
+        } catch (_) { /* ignore */ }
       }
     }
   }
