@@ -114,7 +114,7 @@ export class AudioEngine {
       fxNode = new Tone.AutoFilter({ frequency: "4n", baseFrequency: 200, octaves: 2 + (config.fxLength * 3), depth: 0.2 + (config.fxLength * 0.8), wet: 0.5 + (config.fxLength * 0.5) }).start();
     } else if (config.fxType === 'bitcrusher') {
       const bits = Math.max(1, Math.round(8 - (config.fxLength * 7)));
-      fxNode = new Tone.BitCrusher({ bits: bits, wet: 0.5 + (config.fxLength * 0.5) });
+      fxNode = new Tone.BitCrusher(bits);
     } else if (config.fxType === 'phaser') {
       fxNode = new Tone.Phaser({ frequency: 0.2 + (config.fxLength * 1.8), octaves: 3, baseFrequency: 300, wet: 0.4 + (config.fxLength * 0.4) });
     } else if (config.fxType === 'tremolo') {
