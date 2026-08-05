@@ -9,7 +9,8 @@ export async function initI18n() {
   currentLang = (stored as Lang) || browserLang;
 
   try {
-    const res = await fetch('lang.json');
+    // Adding cache-buster to prevent users from seeing outdated keys after updates
+    const res = await fetch(`lang.json?v=${Date.now()}`);
     if (!res.ok) throw new Error('Failed to load lang.json');
     translations = await res.json();
   } catch (e) {
