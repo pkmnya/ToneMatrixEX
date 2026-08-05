@@ -105,11 +105,13 @@ jobs:
       - name: Upload Portable Executable (Windows)
         if: matrix.platform == 'windows-latest'
         uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ needs.check.outputs.tag_name }}
           name: 'ToneMatrixEX Desktop ${{ needs.check.outputs.tag_name }} (Daily)'
           body: 'ToneMatrixEX 桌面离线纯净版 (每日自动构建)。'
-          files: src-tauri\target\release\app.exe
+          files: src-tauri/target/release/app.exe
         
       - name: Build Tauri App (Mac/Ubuntu)
         if: matrix.platform != 'windows-latest'
