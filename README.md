@@ -4,6 +4,10 @@
 
 <div align="center">
   <img src="QQ20260805-034132.jpg" width="72%" alt="ToneMatrixEX">
+  
+  <h3>
+    <a href="https://pkmnya.github.io/ToneMatrixEX/">👉 点此在线体验 (Play Online) 👈</a>
+  </h3>
 </div>
 
 > 一个受 André Michelle 的 **ToneMatrix** 启发的 Web Grid Sequencer。
@@ -115,6 +119,8 @@ npm run build
 
 > A Web Grid Sequencer inspired by André Michelle's **ToneMatrix**.
 > It can be used both to casually play with melodies, and as a Motif Generator for AI music tools like Suno and Udio.
+
+### [👉 Click here to Play Online 👈](https://pkmnya.github.io/ToneMatrixEX/)
 
 ---
 
