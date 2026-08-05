@@ -31,9 +31,6 @@ jobs:
       - name: Install dependencies
         run: npm install
         
-      - name: Remove local music folder
-        run: rm -rf public/pm
-        
       - name: Build project
         env:
           GITHUB_PAGES: true

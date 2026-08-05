@@ -94,6 +94,10 @@ jobs:
       - name: Install Node dependencies
         run: npm install
 
+      - name: Remove local music folder to reduce desktop app size
+        shell: bash
+        run: rm -rf public/pm
+
       - name: Build Tauri App
         uses: tauri-apps/tauri-action@v0
         env:
