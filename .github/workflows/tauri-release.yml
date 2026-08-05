@@ -61,7 +61,11 @@ jobs:
       matrix:
         include:
           - platform: 'windows-latest'
-            args: ''
+            args: '--no-bundle'
+          - platform: 'macos-latest'
+            args: '--bundles app'
+          - platform: 'ubuntu-22.04'
+            args: '--bundles appimage'
 
     runs-on: ${{ matrix.platform }}
     steps:

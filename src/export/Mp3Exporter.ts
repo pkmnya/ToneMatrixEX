@@ -24,6 +24,7 @@ import BitStream from 'lamejs/src/js/BitStream.js';
 import common from 'lamejs/src/js/common.js';
 import { rowToFrequency } from '../core/ScaleBuilder';
 import type { CompartmentState, WaveType } from '../core/types';
+import { ProjectSerializer } from '../codec/ProjectSerializer';
 
 // Setup required globals for lamejs internal CommonJS scripts in Vite ESM bundle
 function setupLamejsGlobals(): void {
@@ -72,7 +73,8 @@ export class Mp3Exporter {
 
     onProgress?.({ compartmentIndex: total - 1, total, phase: 'encoding' });
 
-    const mp3Blob = await this._encodeToMp3(allBuffers);
+    const stateCode = ProjectSerializer.serialize(compartments);
+    const mp3Blob = await this._encodeToMp3(allBuffers, stateCode);
 
     onProgress?.({ compartmentIndex: total - 1, total, phase: 'done' });
 
@@ -147,7 +149,7 @@ export class Mp3Exporter {
     return buffer as unknown as AudioBuffer;
   }
 
-  private static async _encodeToMp3(buffers: AudioBuffer[]): Promise<Blob> {
+  private static async _encodeToMp3(buffers: AudioBuffer[], stateCode?: string): Promise<Blob> {
     // Calculate total sample count
     const totalSamples = buffers.reduce((s, b) => s + b.length, 0);
 
@@ -185,6 +187,11 @@ export class Mp3Exporter {
     const flushed = encoder.flush();
     if (flushed.length > 0) mp3Parts.push(flushed);
 
+    if (stateCode) {
+      const id3Tag = this._createId3Tag(stateCode);
+      mp3Parts.unshift(id3Tag); // Prepend ID3 tag
+    }
+
     // Cast to any to avoid SharedArrayBuffer vs ArrayBuffer TS distinction
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return new Blob(mp3Parts as any[], { type: 'audio/mpeg' });
@@ -221,5 +228,77 @@ export class Mp3Exporter {
       case 'square': return 'square';
       default: return 'sine';
     }
+  }
+
+  private static _createId3Tag(stateString: string): Uint8Array {
+    const enc = new TextEncoder();
+    const desc = enc.encode("TONEMATRIX_STATE\0");
+    const val = enc.encode(stateString);
+    
+    // TXXX frame payload size: 1 (encoding byte 0x03 for UTF-8) + desc.length + val.length
+    const framePayloadSize = 1 + desc.length + val.length;
+    const frameSize = 10 + framePayloadSize;
+    
+    // Total ID3 tag size (excluding 10-byte header)
+    const tagSize = frameSize;
+    // 4 syncsafe bytes
+    const size1 = (tagSize >> 21) & 0x7F;
+    const size2 = (tagSize >> 14) & 0x7F;
+    const size3 = (tagSize >> 7) & 0x7F;
+    const size4 = tagSize & 0x7F;
+    
+    const buffer = new Uint8Array(10 + tagSize);
+    
+    // Header
+    buffer.set([0x49, 0x44, 0x33], 0); // "ID3"
+    buffer.set([0x03, 0x00], 3); // Version 3.0
+    buffer.set([0x00], 5); // Flags
+    buffer.set([size1, size2, size3, size4], 6); // Size
+    
+    // TXXX Frame Header
+    buffer.set([0x54, 0x58, 0x58, 0x58], 10); // "TXXX"
+    buffer.set([
+      (framePayloadSize >> 24) & 0xFF,
+      (framePayloadSize >> 16) & 0xFF,
+      (framePayloadSize >> 8) & 0xFF,
+      framePayloadSize & 0xFF
+    ], 14); // Frame Size
+    buffer.set([0x00, 0x00], 18); // Frame Flags
+    
+    // TXXX Frame Payload
+    buffer.set([0x03], 20); // Encoding: UTF-8
+    buffer.set(desc, 21); // Description
+    buffer.set(val, 21 + desc.length); // Value
+    
+    return buffer;
+  }
+
+  static extractStateFromMp3(buffer: ArrayBuffer): string | null {
+    const bytes = new Uint8Array(buffer);
+    const signature = "TONEMATRIX_STATE\0";
+    const sigBytes = new TextEncoder().encode(signature);
+    
+    for (let i = 0; i < bytes.length - sigBytes.length; i++) {
+      let match = true;
+      for (let j = 0; j < sigBytes.length; j++) {
+        if (bytes[i + j] !== sigBytes[j]) {
+          match = false;
+          break;
+        }
+      }
+      if (match) {
+        const start = i + sigBytes.length;
+        let end = start;
+        // Search for the end of the frame or null terminator
+        // Since it's ID3v2, the frame size is given, but searching for TMX_v2 pattern is safer
+        // Actually we can just read until a non-printable ascii char or 0x00
+        while (end < bytes.length && bytes[end] !== 0x00 && bytes[end] >= 0x20 && bytes[end] <= 0x7E) {
+          end++;
+        }
+        const stateBytes = bytes.subarray(start, end);
+        return new TextDecoder().decode(stateBytes);
+      }
+    }
+    return null;
   }
 }

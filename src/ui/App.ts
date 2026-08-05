@@ -17,6 +17,7 @@ import { SpectrumVisualizer } from '../renderer/SpectrumVisualizer';
 import { HistoryStore } from '../core/HistoryStore';
 import type { HistoryEntry } from '../core/HistoryStore';
 import { init as initWaline } from '@waline/client';
+import { Mp3Exporter } from '../export/Mp3Exporter';
 import * as Tone from 'tone';
 import { AppConfig } from '../main_config';
 
@@ -116,6 +117,8 @@ export class App {
         <div class="codec-actions">
           <button class="codec-btn btn-ghost" id="btn-reset-codec">${t('app.codecReset')}</button>
           <button class="codec-btn btn-ghost" id="btn-copy-codec" title="${t('toolbar.saveTitle')}">${t('app.codecCopy')}</button>
+          <button class="codec-btn btn-ghost" id="btn-load-mp3">${t('app.codecLoadMp3')}</button>
+          <input type="file" id="input-load-mp3" accept=".mp3" style="display:none">
           <button class="codec-btn btn-accent-small" id="btn-apply-codec" title="${t('toolbar.loadTitle')}">${t('app.codecApply')}</button>
         </div>
       </div>
@@ -162,6 +165,42 @@ export class App {
       } catch {
         textarea.select();
         this._showToast(t('app.codecCopyFailed'));
+      }
+    });
+
+    const fileInput = codecSection.querySelector('#input-load-mp3') as HTMLInputElement;
+    codecSection.querySelector('#btn-load-mp3')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fileInput?.click();
+    });
+
+    fileInput?.addEventListener('change', async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      
+      try {
+        const slice = file.slice(0, 1024 * 1024);
+        const buffer = await slice.arrayBuffer();
+        const code = Mp3Exporter.extractStateFromMp3(buffer);
+        if (code) {
+          const states = ProjectSerializer.deserialize(code);
+          if (states && states.length > 0) {
+            if (appStore.isPlaying) {
+              playbackController.stop();
+            }
+            appStore.loadProject(states);
+            this.root.dispatchEvent(new CustomEvent('app:project-loaded', { bubbles: true }));
+            this._showToast(t('app.codecApplySuccess'));
+          } else {
+            this._showToast(t('app.codecInvalid'));
+          }
+        } else {
+          this._showToast(t('app.loadFailed') + ' No ToneMatrix state found in this MP3');
+        }
+      } catch (err) {
+        console.error('Error reading MP3:', err);
+      } finally {
+        fileInput.value = ''; // reset
       }
     });
 
@@ -755,6 +794,10 @@ export class App {
       applyCodec.title = t('toolbar.loadTitle'); // reuse
       applyCodec.textContent = t('app.codecApply');
     }
+    const btnLoadMp3 = this.root.querySelector('#btn-load-mp3') as HTMLElement;
+    if (btnLoadMp3) {
+      btnLoadMp3.textContent = t('app.codecLoadMp3');
+    }
     const codecTextarea = this.root.querySelector('#codec-textarea') as HTMLTextAreaElement;
     if (codecTextarea) codecTextarea.placeholder = t('app.codecPlaceholder');
 
@@ -857,6 +900,45 @@ export class App {
         this._addPanel(state.config.id);
       }
       this._syncCodecTextarea(true);
+    });
+
+    // Drag-and-drop MP3 to load state
+    document.body.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = 'copy';
+      }
+    });
+
+    document.body.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      const file = e.dataTransfer?.files?.[0];
+      if (!file) return;
+      if (!file.name.toLowerCase().endsWith('.mp3')) return;
+
+      try {
+        // Only read the first 1MB to avoid memory crash and we know ID3 is at the beginning
+        const slice = file.slice(0, 1024 * 1024);
+        const buffer = await slice.arrayBuffer();
+        const code = Mp3Exporter.extractStateFromMp3(buffer);
+        if (code) {
+          const states = ProjectSerializer.deserialize(code);
+          if (states && states.length > 0) {
+            if (appStore.isPlaying) {
+              playbackController.stop();
+            }
+            appStore.loadProject(states);
+            this.root.dispatchEvent(new CustomEvent('app:project-loaded', { bubbles: true }));
+            this._showToast(t('app.codecApplySuccess'));
+          } else {
+            this._showToast(t('app.codecInvalid'));
+          }
+        } else {
+          this._showToast(t('app.loadFailed') + ' No ToneMatrix state found in this MP3');
+        }
+      } catch (err) {
+        console.error('Error reading dropped MP3:', err);
+      }
     });
   }
 

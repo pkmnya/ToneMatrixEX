@@ -21,11 +21,12 @@
       "exportFailed": "⚠ 导出失败："
     },
     "app": {
-      "codecTitle": "项目内容编码 (TMX_v2 HEX 协议)",
+      "codecTitle": "项目内容编码 (TMX_v2 HEX 协议) - 您可以将导出的 MP3 拖入页面以读取原始音乐方块信息",
       "codecReset": "🗑 清空项目",
       "codecResetConfirm": "确定要清空所有隔间并恢复默认状态吗？",
       "codecCopy": "📋 复制编码",
       "codecApply": "⚡ 应用该编码",
+      "codecLoadMp3": "🎵 从 MP3 导入",
       "codecPlaceholder": "操作格子后将自动更新编码，或者在此粘贴 TMX_v2 编码并点击“应用”...",
       "showcaseTitle": "🎧 音乐试听 (基于本作生成的 AI 音乐成品)",
       "showcaseSamples": "我的灵感",
@@ -92,11 +93,12 @@
       "exportFailed": "⚠ Export failed: "
     },
     "app": {
-      "codecTitle": "Project Code (TMX_v2 HEX Protocol)",
+      "codecTitle": "Project Code (TMX_v2 HEX Protocol) - You can drag and drop exported MP3 here to load the project",
       "codecReset": "🗑 Reset Project",
       "codecResetConfirm": "Are you sure you want to clear all compartments and reset to default?",
       "codecCopy": "📋 Copy Code",
       "codecApply": "⚡ Apply Code",
+      "codecLoadMp3": "🎵 Load from MP3",
       "codecPlaceholder": "Code will auto-update here, or paste TMX_v2 code and apply...",
       "showcaseTitle": "🎧 Showcase (AI music generated based on this tool)",
       "showcaseSamples": "Samples",
