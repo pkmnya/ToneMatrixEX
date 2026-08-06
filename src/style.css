@@ -991,9 +991,11 @@ html, body {
 
   /* Compartments: allow vertical layout if only one panel */
   .compartments-area {
-    height: 75vh;
+    height: auto; /* Let it grow to fit all content on mobile */
+    min-height: 75vh;
     padding: 8px;
     gap: 6px;
+    overflow-y: visible; /* Prevent clipping panel content on small screens */
     /* Enable native momentum scroll on iOS */
     -webkit-overflow-scrolling: touch;
   }
