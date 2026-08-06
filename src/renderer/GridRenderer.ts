@@ -97,17 +97,27 @@ export class GridRenderer {
 
   private _recalcCellSize(): void {
     if (!this.state) return;
+    if (this.canvas.parentElement && this.canvas.parentElement.clientWidth === 0) return; // Prevent shrinking when backgrounded/hidden
+
     const rows = this.state.grid[0]?.length ?? 16;
-
-    // Fit cell size to available canvas area in CSS pixels
-    const availW = (this.canvas.clientWidth || 300) - LABEL_WIDTH;
-    const availH = (this.canvas.clientHeight || 300) - HEADER_HEIGHT;
-
     const cols = Math.max(1, this.state.config.width);
+    
+    const isMobile = window.innerWidth <= 768;
+    const availW = (this.canvas.parentElement?.clientWidth || 300) - LABEL_WIDTH;
     const byW = Math.floor(availW / cols - GAP);
-    const byH = Math.floor(availH / rows - GAP);
 
-    this._cellSize = Math.max(MIN_CELL_SIZE, Math.min(MAX_CELL_SIZE, byW, byH));
+    if (isMobile) {
+      // On mobile, grid always fills the width and pushes height down
+      this._cellSize = Math.max(MIN_CELL_SIZE, Math.min(MAX_CELL_SIZE, byW));
+      const desiredH = HEADER_HEIGHT + rows * (this._cellSize + GAP) + 16;
+      this.canvas.style.height = `${desiredH}px`;
+    } else {
+      // On desktop, fit within both available width and fixed height
+      const availH = (this.canvas.parentElement?.clientHeight || 300) - HEADER_HEIGHT;
+      const byH = Math.floor(availH / rows - GAP);
+      this._cellSize = Math.max(MIN_CELL_SIZE, Math.min(MAX_CELL_SIZE, byW, byH));
+      this.canvas.style.height = '100%';
+    }
   }
 
   private _draw(): void {

@@ -187,7 +187,7 @@ export class Toolbar {
       if (event.type === 'PLAYBACK_STARTED') {
         this._playBtn.textContent = t('toolbar.stop');
         this._playBtn.classList.add('btn-play--active');
-      } else if (event.type === 'PLAYBACK_STOPPED') {
+      } else if (event.type === 'PLAYBACK_STOPPED' || event.type === 'PROJECT_LOADED') {
         this._playBtn.textContent = t('toolbar.play');
         this._playBtn.classList.remove('btn-play--active');
       }

@@ -1008,11 +1008,11 @@ html, body {
     height: auto;
   }
 
-  /* Grid canvas takes most of the vertical space */
+  /* Grid canvas adjusts its own height on mobile to keep cells square */
   .comp-canvas-wrap {
-    min-height: calc(100vw - 64px);
+    min-height: 200px;
+    height: auto;
     flex: none;
-    height: calc(100vw - 64px);
   }
 
   /* Resize handle: hide on mobile (panel is auto-sized) */
