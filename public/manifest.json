@@ -1,7 +1,7 @@
 {
   "name": "ToneMatrixEX",
   "short_name": "ToneMatrixEX",
-  "start_url": "/",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#0a0a14",
   "theme_color": "#00e5ff",
