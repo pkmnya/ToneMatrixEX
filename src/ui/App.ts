@@ -312,26 +312,33 @@ export class App {
         }
       });
 
-      // Init Waline safely
-      try {
-        initWaline({
-          el: '#waline',
-          serverURL: AppConfig.walineServerURL, 
-          dark: true,
-          search: false,
-          imageUploader: false,
-        });
-        this._initWalineObserver();
-        this._initHistoryUI(walineSection.querySelector('#btn-my-history') as HTMLButtonElement);
-      } catch (e) {
-        console.error('Failed to initialize Waline:', e);
-        const wEl = walineSection.querySelector('#waline') as HTMLElement;
-        if (wEl) {
-          wEl.innerHTML = `<div style="text-align:center; padding: 20px; color: var(--text-muted);">
-            💬 评论区暂时无法加载 (Comments currently unavailable)<br/>
-            <span style="font-size: 11px;">网络连接问题或服务器维护中</span>
-          </div>`;
-        }
+      // Lazy load Waline via IntersectionObserver
+      const walineEl = walineSection.querySelector('#waline') as HTMLElement;
+      if (walineEl) {
+        const observer = new IntersectionObserver((entries, obs) => {
+          if (entries[0].isIntersecting) {
+            obs.disconnect(); // Only init once
+            try {
+              initWaline({
+                el: '#waline',
+                serverURL: AppConfig.walineServerURL, 
+                dark: true,
+                search: false,
+                imageUploader: false,
+              });
+              this._initWalineObserver();
+              this._initHistoryUI(walineSection.querySelector('#btn-my-history') as HTMLButtonElement);
+            } catch (e) {
+              console.error('Failed to initialize Waline:', e);
+              walineEl.innerHTML = `<div style="text-align:center; padding: 20px; color: var(--text-muted);">
+                💬 评论区暂时无法加载 (Comments currently unavailable)<br/>
+                <span style="font-size: 11px;">网络连接问题或服务器维护中</span>
+              </div>`;
+            }
+          }
+        }, { rootMargin: '200px' }); // Trigger when within 200px of viewport
+        
+        observer.observe(walineEl);
       }
     }
 
