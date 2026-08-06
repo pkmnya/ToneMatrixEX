@@ -95,7 +95,8 @@ export class Mp3Exporter {
     const totalSeconds = loopSeconds + tailSeconds;
 
     const buffer = await Tone.Offline(async ({ transport }) => {
-      const { synthNode } = AudioFactory.buildAudioChain(config, true);
+      const { synthNode, volNode } = AudioFactory.buildAudioChain(config, true);
+      volNode.toDestination();
 
       if (config.waveType === 'piano') {
         await Tone.loaded(); // Wait for samples to load before offline rendering starts
@@ -113,8 +114,8 @@ export class Mp3Exporter {
           }
         }
         if (freqs.length > 0) {
-          // Apply same equal-power volume normalization as live engine
-          const polyVol = freqs.length > 1 ? Tone.gainToDb(1 / Math.sqrt(freqs.length)) : 0;
+          // Apply same volume normalization as live engine
+          const polyVol = freqs.length > 1 ? Tone.gainToDb(1 / freqs.length) : 0;
           // Use absolute stepSeconds instead of '16n' to guarantee correct duration regardless of Tone.Offline BPM bugs
           synthNode.triggerAttackRelease(freqs, stepSeconds, triggerTime, Math.pow(10, polyVol / 20));
         }
