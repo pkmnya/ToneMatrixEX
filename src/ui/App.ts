@@ -14,8 +14,7 @@ import { t, getLang } from '../core/i18n';
 import { Toolbar } from './Toolbar';
 import { CompartmentPanel } from './CompartmentPanel';
 import { SpectrumVisualizer } from '../renderer/SpectrumVisualizer';
-import { HistoryStore } from '../core/HistoryStore';
-import type { HistoryEntry } from '../core/HistoryStore';
+
 import { init as initWaline } from '@waline/client';
 import { Mp3Exporter } from '../export/Mp3Exporter';
 import * as Tone from 'tone';
@@ -290,8 +289,6 @@ export class App {
             <span class="status-dot"></span>
             <span class="waline-title">${t('app.walineTitle')}</span>
           </div>
-          <div style="display:flex; align-items:center; gap: 8px;">
-            <button id="btn-my-history" class="btn-secondary" style="font-size: 11px; padding: 2px 6px;">${t('app.myHistory')}</button>
           </div>
         </div>
         <div class="waline-body">
@@ -302,7 +299,6 @@ export class App {
 
       // Toggle waline
       walineSection.querySelector('.waline-header')?.addEventListener('click', (e) => {
-        if ((e.target as HTMLElement).closest('#btn-my-history')) return;
         walineSection.classList.toggle('waline-section--collapsed');
         
         if (!walineSection.classList.contains('waline-section--collapsed')) {
@@ -327,7 +323,6 @@ export class App {
                 imageUploader: false,
               });
               this._initWalineObserver();
-              this._initHistoryUI(walineSection.querySelector('#btn-my-history') as HTMLButtonElement);
             } catch (e) {
               console.error('Failed to initialize Waline:', e);
               walineEl.innerHTML = `<div style="text-align:center; padding: 20px; color: var(--text-muted);">
@@ -638,7 +633,6 @@ export class App {
         const btn = item.querySelector('.btn-play-audio') as HTMLElement;
         if (btn) {
           btn.addEventListener('click', (e) => {
-            e.stopPropagation(); // prevent folder selection if they just want to play sample
             playAudio(folder.sample, btn);
           });
         }
@@ -695,94 +689,7 @@ export class App {
     }
   }
 
-  // ---
 
-  private _initHistoryUI(btn: HTMLButtonElement): void {
-    const modal = document.createElement('div');
-    modal.className = 'history-modal';
-    modal.style.cssText = `
-      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center;
-    `;
-
-    const content = document.createElement('div');
-    content.style.cssText = `
-      background: var(--color-bg-panel); width: 600px; max-width: 90%; max-height: 80vh;
-      border-radius: 8px; display: flex; flex-direction: column; overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    `;
-
-    const header = document.createElement('div');
-    header.style.cssText = 'padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;';
-    header.innerHTML = `<strong style="color: var(--color-text-main);">🕒 我的本地发言缓存</strong>
-                        <button class="btn-close-modal" style="background: none; border: none; color: #aaa; cursor: pointer; font-size: 20px;">×</button>`;
-
-    const list = document.createElement('div');
-    list.style.cssText = 'padding: 16px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 12px;';
-
-    content.append(header, list);
-    modal.appendChild(content);
-    document.body.appendChild(modal);
-
-    // Render lists
-    const renderList = () => {
-      list.innerHTML = '';
-      const entries = HistoryStore.getHistory();
-      if (entries.length === 0) {
-        list.innerHTML = `<div style="text-align: center; color: #888; padding: 32px;">暂无本地发言记录。</div>`;
-        return;
-      }
-      entries.forEach(entry => {
-        const item = document.createElement('div');
-        item.style.cssText = 'background: rgba(255,255,255,0.05); padding: 12px; border-radius: 6px;';
-
-        const time = new Date(entry.timestamp).toLocaleString();
-        item.innerHTML = `
-          <div style="font-size: 12px; color: #888; margin-bottom: 8px;">${time}</div>
-          <div style="color: #ccc; margin-bottom: 12px; white-space: pre-wrap; font-size: 14px;">${entry.text.replace(/544d5802[0-9a-fA-F]+/g, '[代码已折叠]')}</div>
-          <div style="display: flex; gap: 8px;">
-            <button class="btn-accent-small btn-hist-play" data-code="${entry.code}">▶ 加载此代码</button>
-            <button class="btn-danger btn-hist-del" data-id="${entry.id}" style="padding: 4px 8px; font-size: 12px;">🗑 删除记录</button>
-          </div>
-        `;
-        list.appendChild(item);
-      });
-    };
-
-    btn.addEventListener('click', () => {
-      renderList();
-      modal.style.display = 'flex';
-    });
-
-    header.querySelector('.btn-close-modal')!.addEventListener('click', () => {
-      modal.style.display = 'none';
-    });
-
-    list.addEventListener('click', (e) => {
-      const target = e.target as HTMLElement;
-      if (target.classList.contains('btn-hist-play')) {
-        const code = target.getAttribute('data-code');
-        if (code) {
-          const states = ProjectSerializer.deserialize(code);
-          if (states) {
-            appStore.loadProject(states);
-            this.root.dispatchEvent(new CustomEvent('app:project-loaded', { bubbles: true }));
-            this._showToast('✓ 代码已加载');
-            this._syncCodecTextarea(true);
-            modal.style.display = 'none';
-          }
-        }
-      } else if (target.classList.contains('btn-hist-del')) {
-        const id = target.getAttribute('data-id');
-        if (id) {
-          HistoryStore.removeHistory(id);
-          renderList();
-        }
-      }
-    });
-
-    window.addEventListener('tmx-history-changed', renderList);
-  }
 
   private _updateTexts(): void {
     const specTitle = this.root.querySelector('.spectrum-title');
@@ -832,8 +739,7 @@ export class App {
     const walineTitle = this.root.querySelector('.waline-title');
     if (walineTitle) walineTitle.textContent = t('app.walineTitle');
     
-    const btnMyHistory = this.root.querySelector('#btn-my-history');
-    if (btnMyHistory) btnMyHistory.textContent = t('app.myHistory');
+
 
     // Reload description
     this._loadDescription();

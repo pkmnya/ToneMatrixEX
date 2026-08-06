@@ -156,11 +156,9 @@ export class CompartmentPanel {
     // FX type select
     const fxTypeLabels: Record<FxType, string> = {
       none: t('types.none'),
+      sustain: t('types.sustain'),
       pingpong: t('types.pingpong'),
       chorus: t('types.chorus'),
-      freeverb: t('types.freeverb'),
-      autofilter: t('types.autofilter'),
-      bitcrusher: t('types.bitcrusher'),
       phaser: t('types.phaser'),
       tremolo: t('types.tremolo'),
     };
@@ -171,19 +169,7 @@ export class CompartmentPanel {
     });
     sb.appendChild(this._row(t('panel.fx'), 'panel.fx', fxSelect));
 
-    // FX Length slider
-    const fxLenVal = document.createElement('span');
-    fxLenVal.className = 'slider-value';
-    fxLenVal.textContent = `${Math.round(cfg.fxLength * 100)}%`;
 
-    const fxLenSlider = this._slider('fxLength', 0, 100, 1, Math.round(cfg.fxLength * 100), (v) => {
-      const len = v / 100;
-      fxLenVal.textContent = `${v}%`;
-      const newCfg = appStore.getState(id)!.config;
-      appStore.updateConfig(id, { fxLength: len });
-      audioEngine.createPool({ ...newCfg, fxLength: len });
-    });
-    sb.appendChild(this._row(t('panel.fxLen'), 'panel.fxLen', fxLenSlider, fxLenVal));
 
     // Volume slider
     const volVal = document.createElement('span');
@@ -411,7 +397,7 @@ export class CompartmentPanel {
     return label;
   }
 
-  private _slider(name: string, min: number, max: number, step: number, value: number, onChange: (v: number) => void): HTMLInputElement {
+  private _slider(name: string, min: number, max: number, step: number, value: number, onInput: (v: number) => void, onChange?: (v: number) => void): HTMLInputElement {
     const input = document.createElement('input');
     input.type = 'range';
     input.className = 'comp-slider';
@@ -420,7 +406,10 @@ export class CompartmentPanel {
     input.max  = String(max);
     input.step = String(step);
     input.value = String(value);
-    input.addEventListener('input', () => onChange(Number(input.value)));
+    input.addEventListener('input', () => onInput(Number(input.value)));
+    if (onChange) {
+      input.addEventListener('change', () => onChange(Number(input.value)));
+    }
     return input;
   }
 

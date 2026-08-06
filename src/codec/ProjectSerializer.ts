@@ -15,7 +15,7 @@ import { NOTE_RANGE_ROWS } from '../core/types';
 import { BitmapCodec } from './BitmapCodec';
 import { t } from '../core/i18n';
 
-const VERSION_PREFIX = 'TMX_v2';
+const VERSION_PREFIX = 'TMX_v3';
 const SEP_OUTER = '|';
 const SEP_INNER = ',';
 
@@ -48,24 +48,20 @@ const CODE_TO_WAVE_TYPE: Record<string, WaveType> = {
   '4': 'piano',
 };
 
-type FxTypeCode = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7';
+type FxTypeCode = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';
 const FX_TYPE_TO_CODE: Record<FxType, FxTypeCode> = {
   none: '0',
+  sustain: '8',
   pingpong: '1',
   chorus: '2',
-  freeverb: '3',
-  autofilter: '4',
-  bitcrusher: '5',
   phaser: '6',
   tremolo: '7',
 };
 const CODE_TO_FX_TYPE: Record<string, FxType> = {
   '0': 'none',
+  '8': 'sustain',
   '1': 'pingpong',
   '2': 'chorus',
-  '3': 'freeverb',
-  '4': 'autofilter',
-  '5': 'bitcrusher',
   '6': 'phaser',
   '7': 'tremolo',
 };
@@ -85,17 +81,17 @@ export class ProjectSerializer {
         config.volume.toFixed(2),
         config.panelWidth.toString(),
         FX_TYPE_TO_CODE[config.fxType],
-        config.fxLength.toFixed(2),
         hex,
       ].join(SEP_INNER);
     });
     return [VERSION_PREFIX, ...parts].join(SEP_OUTER);
   }
 
-  static deserialize(raw: string): CompartmentState[] | null {
+    static deserialize(raw: string): CompartmentState[] | null {
     try {
       const chunks = raw.split(SEP_OUTER);
-      if (chunks[0] !== VERSION_PREFIX) return null;
+      const version = chunks[0];
+      if (version !== 'TMX_v3') return null;
 
       const states: CompartmentState[] = [];
 
@@ -106,19 +102,11 @@ export class ProjectSerializer {
         const [
           activeStr, bpmStr, rangeCode, widthStr,
           waveCode, volStr, panelWidthStr, 
-          field7, field8, field9
+          fxCode, hex
         ] = fields;
-
-        // Support both old format (8 fields) and new format (10 fields)
-        const isNewFormat = fields.length >= 10;
-        const fxCode = isNewFormat ? field7 : '0';
-        const fxLenStr = isNewFormat ? field8 : '0';
-        const hex = isNewFormat ? field9 : field7;
-
         const noteRange: NoteRange = CODE_TO_NOTE_RANGE[rangeCode] ?? 'pentatonic';
         const waveType:  WaveType  = CODE_TO_WAVE_TYPE[waveCode]   ?? 'sine';
         const fxType:    FxType    = CODE_TO_FX_TYPE[fxCode]       ?? 'none';
-        const fxLength   = Math.max(0, Math.min(1, parseFloat(fxLenStr) || 0));
         const width      = Math.max(1, Math.min(512, parseInt(widthStr,  10) || 16));
         const bpm        = Math.max(30, Math.min(400, parseInt(bpmStr,   10) || 120));
         const volume     = Math.max(0, Math.min(1.5,  parseFloat(volStr)     || 0.8));
@@ -138,7 +126,6 @@ export class ProjectSerializer {
             volume,
             panelWidth,
             fxType,
-            fxLength,
           },
           grid,
           currentColumn: -1,

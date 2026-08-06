@@ -25,6 +25,7 @@ import common from 'lamejs/src/js/common.js';
 import { rowToFrequency } from '../core/ScaleBuilder';
 import type { CompartmentState, WaveType } from '../core/types';
 import { ProjectSerializer } from '../codec/ProjectSerializer';
+import { AudioFactory } from '../audio/AudioFactory';
 
 // Setup required globals for lamejs internal CommonJS scripts in Vite ESM bundle
 function setupLamejsGlobals(): void {
@@ -90,62 +91,15 @@ export class Mp3Exporter {
     const loopSeconds = config.width * stepSeconds;
 
     // Dynamic tail based on FX
-    let tailSeconds = 0.5; // Base tail for ADSR release
-    if (config.fxType === 'pingpong' || config.fxType === 'freeverb') {
-      tailSeconds += 0.5 + (config.fxLength * 3.5); // Up to 4s extra for long reverbs/delays
-    } else if (config.fxType === 'chorus') {
-      tailSeconds += 0.5;
-    }
+    const tailSeconds = AudioFactory.calculateTailSeconds(config);
     const totalSeconds = loopSeconds + tailSeconds;
 
     const buffer = await Tone.Offline(async ({ transport }) => {
-      // ---- Exactly mirrors AudioEngine.createPool() ----
-      let synthNode: Tone.PolySynth | Tone.Sampler;
+      const { synthNode } = AudioFactory.buildAudioChain(config, true);
 
       if (config.waveType === 'piano') {
-        synthNode = new Tone.Sampler({
-          urls: {
-            A0: "A0.mp3", C1: "C1.mp3", A1: "A1.mp3", C2: "C2.mp3", A2: "A2.mp3",
-            C3: "C3.mp3", A3: "A3.mp3", C4: "C4.mp3", A4: "A4.mp3", C5: "C5.mp3",
-            A5: "A5.mp3", C6: "C6.mp3", A6: "A6.mp3", C7: "C7.mp3", A7: "A7.mp3",
-          },
-          baseUrl: "https://tonejs.github.io/audio/salamander/",
-        });
         await Tone.loaded(); // Wait for samples to load before offline rendering starts
-      } else {
-        synthNode = new Tone.PolySynth(Tone.Synth, {
-          oscillator: { type: this._toOscType(config.waveType) as any },
-          envelope: { attack: 0.002, decay: 0.3, sustain: 0.05, release: 0.5 },
-        });
       }
-
-      // Simplified effects chain for mobile emulator stability
-      const vol = new Tone.Volume(Tone.gainToDb(config.volume)).toDestination();
-
-      let fxNode: Tone.ToneAudioNode | null = null;
-      if (config.fxType === 'pingpong') {
-        fxNode = new Tone.PingPongDelay({ delayTime: '8n', feedback: config.fxLength * 0.85, wet: 0.2 + (config.fxLength * 0.3) });
-      } else if (config.fxType === 'chorus') {
-        fxNode = new Tone.Chorus({ frequency: 2, delayTime: 4, depth: 0.5 + (config.fxLength * 0.5), feedback: config.fxLength * 0.5, wet: 0.5 }).start();
-      } else if (config.fxType === 'freeverb') {
-        fxNode = new Tone.Freeverb({ roomSize: 0.5 + (config.fxLength * 0.48), dampening: 3000, wet: 0.3 + (config.fxLength * 0.4) });
-      } else if (config.fxType === 'autofilter') {
-        fxNode = new Tone.AutoFilter({ frequency: "4n", baseFrequency: 200, octaves: 2 + (config.fxLength * 3), depth: 0.2 + (config.fxLength * 0.8), wet: 0.5 + (config.fxLength * 0.5) }).start();
-      } else if (config.fxType === 'bitcrusher') {
-        const bits = Math.max(1, Math.round(8 - (config.fxLength * 7)));
-        fxNode = new Tone.BitCrusher(bits);
-      } else if (config.fxType === 'phaser') {
-        fxNode = new Tone.Phaser({ frequency: 0.2 + (config.fxLength * 1.8), octaves: 3, baseFrequency: 300, wet: 0.4 + (config.fxLength * 0.4) });
-      } else if (config.fxType === 'tremolo') {
-        fxNode = new Tone.Tremolo({ frequency: 8, type: 'square', depth: 0.2 + (config.fxLength * 0.8), wet: 1.0 }).start();
-      }
-
-      if (fxNode) {
-        synthNode.chain(fxNode, vol);
-      } else {
-        synthNode.connect(vol);
-      }
-      // ---- end mirror ----
 
       transport.bpm.value = config.bpm;
 
@@ -159,8 +113,8 @@ export class Mp3Exporter {
           }
         }
         if (freqs.length > 0) {
-          // Apply same polyphony volume normalization as live engine
-          const polyVol = freqs.length > 1 ? Tone.gainToDb(1 / freqs.length) : 0;
+          // Apply same equal-power volume normalization as live engine
+          const polyVol = freqs.length > 1 ? Tone.gainToDb(1 / Math.sqrt(freqs.length)) : 0;
           // Use absolute stepSeconds instead of '16n' to guarantee correct duration regardless of Tone.Offline BPM bugs
           synthNode.triggerAttackRelease(freqs, stepSeconds, triggerTime, Math.pow(10, polyVol / 20));
         }
@@ -243,15 +197,7 @@ export class Mp3Exporter {
     }, 1000);
   }
 
-  private static _toOscType(wt: WaveType): Tone.ToneOscillatorType {
-    switch (wt) {
-      case 'sine': return 'sine';
-      case 'sawtooth': return 'sawtooth';
-      case 'triangle': return 'triangle';
-      case 'square': return 'square';
-      default: return 'sine';
-    }
-  }
+
 
   private static _createId3Tag(stateString: string): Uint8Array {
     const enc = new TextEncoder();

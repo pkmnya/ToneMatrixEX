@@ -22,26 +22,25 @@
       "installApp": "创建快捷方式"
     },
     "app": {
-      "codecTitle": "项目内容编码 (TMX_v2 HEX 协议) - 您可以将导出的 MP3 拖入页面以读取原始音乐方块信息",
+      "codecTitle": "项目内容编码 (TMX_v3 HEX 协议) - 您可以将导出的 MP3 拖入页面以读取原始音乐方块信息",
       "pwaFallback": "请点击浏览器的【菜单】或【分享】，选择【添加到桌面】、【添加到主屏幕】或【安装并创建快捷方式】进行安装~",
       "codecReset": "🗑 清空项目",
       "codecResetConfirm": "确定要清空所有隔间并恢复默认状态吗？",
       "codecCopy": "📋 复制编码",
       "codecApply": "⚡ 应用该编码",
       "codecLoadMp3": "🎵 从 MP3 导入",
-      "codecPlaceholder": "操作格子后将自动更新编码，或者在此粘贴 TMX_v2 编码并点击“应用”...",
+      "codecPlaceholder": "操作格子后将自动更新编码，或者在此粘贴 TMX_v3 编码并点击“应用”...",
       "showcaseTitle": "🎧 音乐试听 (基于本作生成的 AI 音乐成品)",
       "showcaseSamples": "我的灵感",
       "showcaseMusic": "成品音乐",
       "codecCopySuccess": "✓ 编码已复制到剪贴板",
       "codecCopyFailed": "⚠ 请手动 Ctrl+C 复制",
-      "codecInvalid": "⚠ 编码格式无效，请确保是合法完整的 TMX_v2 编码",
+      "codecInvalid": "⚠ 编码格式无效，请确保是合法完整的 TMX_v3 编码",
       "codecApplySuccess": "✓ 成功从文本框加载项目编码！",
       "descTitle": "说明区",
       "spectrumTitle": "频谱分析",
       "toggleTitle": "折叠/展开",
-      "walineTitle": "社区分享 & 评论区",
-      "myHistory": "🕒 我的历史"
+      "walineTitle": "社区分享 & 评论区"
     },
     "panel": {
       "dragTitle": "拖动调整宽度",
@@ -50,7 +49,6 @@
       "scale": "音阶",
       "wave": "音色",
       "fx": "后期",
-      "fxLen": "后期时长",
       "volume": "音量",
       "clear": "清除",
       "duplicate": "复制",
@@ -70,11 +68,9 @@
       "triangle": "三角波",
       "piano": "钢琴",
       "none": "无 (None)",
+      "sustain": "延音 (Sustain)",
       "pingpong": "回声 (PingPong)",
       "chorus": "合唱 (Chorus)",
-      "freeverb": "混响 (Freeverb)",
-      "autofilter": "哇音 (AutoFilter)",
-      "bitcrusher": "像素碎音 (BitCrusher)",
       "phaser": "相位偏移 (Phaser)",
       "tremolo": "颤音切片 (Tremolo)"
     }
@@ -102,26 +98,25 @@
       "installApp": "Install App"
     },
     "app": {
-      "codecTitle": "Project Code (TMX_v2 HEX Protocol) - You can drag and drop exported MP3 here to load the project",
+      "codecTitle": "Project Code (TMX_v3 HEX Protocol) - You can drag and drop exported MP3 here to load the project",
       "pwaFallback": "Please tap the browser [Menu] or [Share] and select [Add to Home Screen] to install~",
       "codecReset": "🗑 Reset Project",
       "codecResetConfirm": "Are you sure you want to clear all compartments and reset to default?",
       "codecCopy": "📋 Copy Code",
       "codecApply": "⚡ Apply Code",
       "codecLoadMp3": "🎵 Load from MP3",
-      "codecPlaceholder": "Code will auto-update here, or paste TMX_v2 code and apply...",
+      "codecPlaceholder": "Code will auto-update here, or paste TMX_v3 code and apply...",
       "showcaseTitle": "🎧 Showcase (AI music generated based on this tool)",
       "showcaseSamples": "Samples",
       "showcaseMusic": "Finished Tracks",
       "codecCopySuccess": "✓ Code copied to clipboard",
       "codecCopyFailed": "⚠ Please use Ctrl+C to copy manually",
-      "codecInvalid": "⚠ Invalid code format, please ensure it's a valid TMX_v2 code",
+      "codecInvalid": "⚠ Invalid code format, please ensure it's a valid TMX_v3 code",
       "codecApplySuccess": "✓ Project code loaded successfully!",
       "descTitle": "Description",
       "spectrumTitle": "Spectrum Analysis",
       "toggleTitle": "Toggle",
-      "walineTitle": "Community & Comments",
-      "myHistory": "🕒 My History"
+      "walineTitle": "Community & Comments"
     },
     "panel": {
       "dragTitle": "Drag to resize",
@@ -130,7 +125,6 @@
       "scale": "Scale",
       "wave": "Wave",
       "fx": "FX",
-      "fxLen": "Tail",
       "volume": "Vol",
       "clear": "Clear",
       "duplicate": "Dup",
@@ -150,11 +144,9 @@
       "triangle": "Triangle",
       "piano": "Piano",
       "none": "None",
+      "sustain": "Sustain",
       "pingpong": "Echo (PingPong)",
       "chorus": "Chorus",
-      "freeverb": "Reverb (Freeverb)",
-      "autofilter": "Wah-wah (AutoFilter)",
-      "bitcrusher": "8-bit (BitCrusher)",
       "phaser": "Phaser",
       "tremolo": "Tremolo"
     }

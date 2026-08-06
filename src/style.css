@@ -1307,9 +1307,9 @@ button, input, select, .toggle, .comp-btn, .toolbar-btn {
   height: 28px;
   display: flex;
   justify-content: center;
-  align-items: center;
   cursor: pointer;
   font-size: 10px;
+  flex-shrink: 0;
   transition: all 0.2s;
 }
 
@@ -1441,6 +1441,7 @@ button, input, select, .toggle, .comp-btn, .toolbar-btn {
   justify-content: center;
   cursor: pointer;
   font-size: 14px;
+  flex-shrink: 0;
   transition: all 0.2s ease;
 }
 
@@ -1456,6 +1457,12 @@ button, input, select, .toggle, .comp-btn, .toolbar-btn {
   gap: 6px;
   margin-left: 12px;
   margin-right: 12px;
+}
+
+@media (max-width: 600px) {
+  .player-volume-wrapper {
+    display: none;
+  }
 }
 
 .player-volume {

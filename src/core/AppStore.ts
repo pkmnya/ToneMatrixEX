@@ -37,7 +37,6 @@ function makeDefaultConfig(index: number): CompartmentConfig {
     volume: 0.8,
     panelWidth: 720,
     fxType: 'none',
-    fxLength: 0.1,
   };
 }
 

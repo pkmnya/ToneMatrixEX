@@ -4,7 +4,7 @@
 
 export type NoteRange = 'pentatonic' | 'diatonic' | 'chromatic';
 export type WaveType = 'sine' | 'sawtooth' | 'square' | 'triangle' | 'piano';
-export type FxType = 'none' | 'pingpong' | 'chorus' | 'freeverb' | 'autofilter' | 'bitcrusher' | 'phaser' | 'tremolo';
+export type FxType = 'none' | 'sustain' | 'pingpong' | 'chorus' | 'phaser' | 'tremolo';
 
 /** Rows per note range — direct port from C# NoteRange enum */
 export const NOTE_RANGE_ROWS: Record<NoteRange, number> = {
@@ -32,8 +32,6 @@ export interface CompartmentConfig {
   /** UI panel width in px (draggable) */
   panelWidth: number;
   fxType: FxType;
-  /** Effect length/intensity (0.0 - 1.0) */
-  fxLength: number;
 }
 
 /** Runtime state for a compartment, including grid data */
