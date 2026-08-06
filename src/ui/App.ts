@@ -932,7 +932,7 @@ export class App {
       } else {
         // Fallback for browsers that don't support programmatic install prompt
         // (like iOS Safari or many Chinese browsers)
-        this._showToast(t('app.pwaFallback', '请点击浏览器的【菜单】或【分享】，选择【添加到桌面】、【添加到主屏幕】或【安装并创建快捷方式】进行安装~'));
+        this._showToast(t('app.pwaFallback'));
       }
     });
 
