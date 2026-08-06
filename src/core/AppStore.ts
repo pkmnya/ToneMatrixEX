@@ -35,7 +35,7 @@ function makeDefaultConfig(index: number): CompartmentConfig {
     isActive: true,
     waveType: 'sine',
     volume: 0.8,
-    panelWidth: 480,
+    panelWidth: 720,
     fxType: 'none',
     fxLength: 0.1,
   };

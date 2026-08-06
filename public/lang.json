@@ -18,10 +18,12 @@
       "rendering": "渲染隔间",
       "encoding": "编码 MP3…",
       "exportSuccess": "✓ MP3 已下载",
-      "exportFailed": "⚠ 导出失败："
+      "exportFailed": "⚠ 导出失败：",
+      "installApp": "创建快捷方式"
     },
     "app": {
       "codecTitle": "项目内容编码 (TMX_v2 HEX 协议) - 您可以将导出的 MP3 拖入页面以读取原始音乐方块信息",
+      "pwaFallback": "请点击浏览器的【菜单】或【分享】，选择【添加到桌面】、【添加到主屏幕】或【安装并创建快捷方式】进行安装~",
       "codecReset": "🗑 清空项目",
       "codecResetConfirm": "确定要清空所有隔间并恢复默认状态吗？",
       "codecCopy": "📋 复制编码",
@@ -55,7 +57,8 @@
       "delete": "删除",
       "add": "+ 新增",
       "playing": "▶ 正在播放",
-      "label": "隔间"
+      "label": "隔间",
+      "scrollHint": "试试按住这里往上滑动吧~"
     },
     "types": {
       "pentatonic": "五声音阶 (16行)",
@@ -95,10 +98,12 @@
       "rendering": "Rendering comp",
       "encoding": "Encoding MP3...",
       "exportSuccess": "✓ MP3 downloaded",
-      "exportFailed": "⚠ Export failed: "
+      "exportFailed": "⚠ Export failed: ",
+      "installApp": "Install App"
     },
     "app": {
       "codecTitle": "Project Code (TMX_v2 HEX Protocol) - You can drag and drop exported MP3 here to load the project",
+      "pwaFallback": "Please tap the browser [Menu] or [Share] and select [Add to Home Screen] to install~",
       "codecReset": "🗑 Reset Project",
       "codecResetConfirm": "Are you sure you want to clear all compartments and reset to default?",
       "codecCopy": "📋 Copy Code",
@@ -132,7 +137,8 @@
       "delete": "Del",
       "add": "+ Add",
       "playing": "▶ Playing",
-      "label": "Comp"
+      "label": "Comp",
+      "scrollHint": "Try sliding up from here~"
     },
     "types": {
       "pentatonic": "Pentatonic (16 rows)",

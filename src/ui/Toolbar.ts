@@ -29,9 +29,9 @@ export class Toolbar {
     } else {
       this._playBtn.textContent = t('toolbar.play');
     }
-    
-    const addBtn = this.el.querySelector('#btn-add-compartment') as HTMLButtonElement;
-    if (addBtn) addBtn.textContent = t('toolbar.newComp');
+
+    const installBtn = this.el.querySelector('#btn-install-pwa') as HTMLButtonElement;
+    if (installBtn) installBtn.textContent = '⬇ ' + t('toolbar.installApp');
 
     const saveBtn = this.el.querySelector('#btn-save') as HTMLButtonElement;
     if (saveBtn) {
@@ -83,17 +83,16 @@ export class Toolbar {
     });
     this._playBtn.id = 'btn-play-stop';
 
-    // Add compartment
-    const addBtn = this._btn(t('toolbar.newComp'), 'btn-secondary', () => {
-      appStore.addCompartment();
-      this.el.dispatchEvent(new CustomEvent('app:compartment-added', {
-        detail: { id: appStore.getAll().at(-1)!.config.id },
-        bubbles: true,
-      }));
+    // Install / Create Shortcut
+    const installBtn = this._btn('⬇ ' + t('toolbar.installApp'), 'btn-play', () => {
+      this.el.dispatchEvent(new CustomEvent('app:install-pwa', { bubbles: true }));
     });
-    addBtn.id = 'btn-add-compartment';
+    installBtn.id = 'btn-install-pwa';
+    installBtn.style.background = '#ff9800'; // Orange color
+    installBtn.style.borderColor = '#ff9800';
+    installBtn.style.color = '#000';
 
-    center.append(this._playBtn, addBtn);
+    center.append(this._playBtn, installBtn);
 
     // Right controls
     const right = document.createElement('div');

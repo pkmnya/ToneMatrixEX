@@ -198,7 +198,7 @@ html, body {
    ============================================================ */
 .compartments-area {
   flex: none;
-  height: 60vh;
+  height: 68vh;
   min-height: 200px;
   display: flex;
   flex-direction: row;
@@ -467,7 +467,6 @@ html, body {
 .comp-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
 
 .comp-btn.btn-primary {
-  grid-column: 1 / -1;
   background: var(--accent-dim);
   color: var(--accent);
   border-color: rgba(0, 229, 255, 0.25);
@@ -947,26 +946,30 @@ html, body {
     --spectrum-height: 56px;
   }
 
-  /* Toolbar: stack into two rows on small screens */
+  /* Toolbar: keep as single row */
   .toolbar {
-    flex-wrap: wrap;
     height: auto;
-    padding: 8px 10px;
-    gap: 6px;
-    row-gap: 6px;
+    padding: 8px 6px;
+    gap: 4px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
   }
+  .toolbar::-webkit-scrollbar { display: none; }
 
   .toolbar-logo {
-    flex: 1;
+    flex: 0 0 auto;
     font-size: 14px;
+    margin-right: 4px;
   }
 
   .toolbar-logo .logo-text { display: none; }
 
   .toolbar-center {
-    order: 3;
-    width: 100%;
-    gap: 6px;
+    flex: 1;
+    display: flex;
+    justify-content: flex-start;
+    gap: 4px;
   }
 
   .toolbar-right {
@@ -989,6 +992,7 @@ html, body {
 
   /* Compartments: allow vertical layout if only one panel */
   .compartments-area {
+    height: 75vh;
     padding: 8px;
     gap: 6px;
     /* Enable native momentum scroll on iOS */
@@ -998,15 +1002,16 @@ html, body {
   /* Full-width panels on phones by default */
   .compartment-panel {
     min-width: calc(100vw - 16px);
+    max-width: calc(100vw - 16px);
     flex-direction: column;
     height: auto;
   }
 
   /* Grid canvas takes most of the vertical space */
   .comp-canvas-wrap {
-    min-height: 220px;
+    min-height: calc(100vw - 64px);
     flex: none;
-    height: 220px;
+    height: calc(100vw - 64px);
   }
 
   /* Resize handle: hide on mobile (panel is auto-sized) */
@@ -1024,9 +1029,43 @@ html, body {
     padding: 10px;
     border-left: none;
     border-top: 1px solid var(--border);
-    overflow-x: auto;
-    overflow-y: hidden;
-    max-height: 180px;
+    flex: 1;
+    overflow-y: hidden !important; /* Force no internal scroll */
+    max-height: none;
+    scrollbar-width: none; /* Hide scrollbar for Firefox */
+  }
+
+  /* Global popup hint for mobile */
+  .mobile-scroll-hint {
+    position: fixed;
+    bottom: 25vh; /* Roughly above the panel */
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 229, 255, 0.15);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    pointer-events: none;
+    z-index: 9999;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
+    animation: globalHintFadeOut 5s ease-in-out forwards;
+  }
+
+  @keyframes globalHintFadeOut {
+    0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+    10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    20% { transform: translateX(-50%) translateY(-5px); }
+    30% { transform: translateX(-50%) translateY(0); }
+    80% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-20px); display: none; }
+  }
+
+  .comp-sidebar::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for Webkit */
   }
 
   .comp-title {
@@ -1094,15 +1133,12 @@ html, body {
     left: 22px;
   }
 
-  /* Sidebar buttons: full-width on phone */
+  /* Sidebar buttons: four per row on phone to save space */
   .comp-btn-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(4, 1fr);
     width: 100%;
     min-width: 120px;
-  }
-
-  .comp-btn.btn-primary {
-    grid-column: 1;
+    gap: 4px;
   }
 
   /* Status indicator: inline */
@@ -1125,6 +1161,9 @@ html, body {
   /* Spectrum: slimmer on phone */
   .spectrum-section {
     height: calc(var(--spectrum-height) + 28px);
+  }
+  .spectrum-section.spectrum-section--collapsed {
+    height: 32px;
   }
 }
 

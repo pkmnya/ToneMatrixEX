@@ -1,0 +1,22 @@
+{
+  "name": "ToneMatrixEX",
+  "short_name": "ToneMatrixEX",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a14",
+  "theme_color": "#00e5ff",
+  "description": "A modern and advanced grid-based musical sequencer inspired by the classic ToneMatrix.",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

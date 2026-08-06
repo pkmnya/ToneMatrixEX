@@ -15,6 +15,14 @@ async function bootstrap() {
   if (!root) throw new Error('#app element not found');
 
   new App(root);
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch((err) => {
+        console.error('ServiceWorker registration failed:', err);
+      });
+    });
+  }
 }
 
 bootstrap();

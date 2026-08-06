@@ -334,6 +334,15 @@ export class App {
         }
       }
     }
+
+    // Show global mobile pull-up hint
+    if (window.innerWidth <= 640) {
+      const hint = document.createElement('div');
+      hint.className = 'mobile-scroll-hint';
+      hint.textContent = t('panel.scrollHint');
+      document.body.appendChild(hint);
+      setTimeout(() => hint.remove(), 5500);
+    }
   }
 
   private _bindResizer(resizer: HTMLElement, target: HTMLElement) {
@@ -900,6 +909,31 @@ export class App {
         this._addPanel(state.config.id);
       }
       this._syncCodecTextarea(true);
+    });
+
+    // PWA Install Logic
+    let deferredPrompt: any = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      // Prevent Chrome 67 and earlier from automatically showing the prompt
+      e.preventDefault();
+      // Stash the event so it can be triggered later.
+      deferredPrompt = e;
+    });
+
+    this.root.addEventListener('app:install-pwa', async () => {
+      if (deferredPrompt) {
+        // Show the install prompt
+        deferredPrompt.prompt();
+        // Wait for the user to respond to the prompt
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          deferredPrompt = null;
+        }
+      } else {
+        // Fallback for browsers that don't support programmatic install prompt
+        // (like iOS Safari or many Chinese browsers)
+        this._showToast(t('app.pwaFallback', '请点击浏览器的【菜单】或【分享】，选择【添加到桌面】、【添加到主屏幕】或【安装并创建快捷方式】进行安装~'));
+      }
     });
 
     // Drag-and-drop MP3 to load state

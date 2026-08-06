@@ -84,6 +84,8 @@ export class CompartmentPanel {
     return el;
   }
 
+
+
   private _buildSidebar(): HTMLElement {
     const id = this._id;
     const state = appStore.getState(id)!;
@@ -91,6 +93,7 @@ export class CompartmentPanel {
 
     const sb = document.createElement('div');
     sb.className = 'comp-sidebar';
+    sb.dataset.hint = t('panel.scrollHint');
 
     // Title / label
     const title = document.createElement('div');
@@ -346,6 +349,10 @@ export class CompartmentPanel {
   }
 
   private _updateTexts(): void {
+    if (this.sidebar) {
+      this.sidebar.dataset.hint = t('panel.scrollHint');
+    }
+
     const handle = this.el.querySelector('.comp-resize-handle') as HTMLElement;
     if (handle) handle.title = t('panel.dragTitle');
 
