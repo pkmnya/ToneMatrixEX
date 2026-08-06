@@ -60,7 +60,7 @@ export class AudioFactory {
           C6: "C6.mp3",
           C7: "C7.mp3",
         },
-        baseUrl: "/samples/piano/",
+        baseUrl: import.meta.env.BASE_URL + "samples/piano/",
         release: isSustain ? sustainRelease : 2,
       });
     } else {
@@ -86,7 +86,7 @@ export class AudioFactory {
     } else if (config.fxType === 'phaser') {
       fxNode = new Tone.Phaser({ frequency: 2.0, octaves: 3, baseFrequency: 300, wet: 0.8 });
     } else if (config.fxType === 'tremolo') {
-      fxNode = new Tone.Tremolo({ frequency: 8, type: 'square', depth: 1.0, wet: 1.0 }).start();
+      fxNode = new Tone.Tremolo({ frequency: 8, type: 'sine', depth: 1.0, wet: 1.0 }).start();
     }
 
     // Connect
