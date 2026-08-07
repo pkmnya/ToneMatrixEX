@@ -85,14 +85,11 @@ export class AppStore {
 
   // ---- Compartment CRUD ----
 
-  addCompartment(afterId?: string): string {
-    const config = makeDefaultConfig(this._compartments.length);
-    const idx = afterId
-      ? this._compartments.findIndex(c => c.config.id === afterId) + 1
-      : this._compartments.length;
-    this._addCompartmentInternal(config, idx);
-    this.emit({ type: 'COMPARTMENT_ADDED', compartmentId: config.id });
-    return config.id;
+  addCompartment(): string {
+    const newConfig = makeDefaultConfig(this._compartments.length);
+    this._addCompartmentInternal(newConfig);
+    this.emit({ type: 'COMPARTMENT_ADDED', compartmentId: newConfig.id });
+    return newConfig.id;
   }
 
   private _addCompartmentInternal(config: CompartmentConfig, idx?: number): void {
@@ -129,8 +126,7 @@ export class AppStore {
     newConfig.fxType = src.config.fxType;
     newConfig.volume = src.config.volume;
     newConfig.isActive = src.config.isActive;
-    const idx = this._compartments.findIndex(c => c.config.id === id) + 1;
-    this._addCompartmentInternal(newConfig, idx);
+    this._addCompartmentInternal(newConfig);
     // Copy grid data
     const newState = this.getState(newConfig.id)!;
     newState.grid = src.grid.map(col => [...col]);

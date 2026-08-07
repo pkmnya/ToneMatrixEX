@@ -831,8 +831,7 @@ export class App {
 
   private _bindPanelEvents(panel: CompartmentPanel): void {
     panel.el.addEventListener('compartment:add', (e) => {
-      const { afterId } = (e as CustomEvent).detail;
-      const newId = appStore.addCompartment(afterId);
+      const newId = appStore.addCompartment();
       this._triggerNewCompHint();
     });
 
