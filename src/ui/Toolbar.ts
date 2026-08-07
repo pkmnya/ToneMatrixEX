@@ -123,33 +123,7 @@ export class Toolbar {
 
     langToggle.append(zhBtn, enBtn);
 
-    // Save
-    const saveBtn = this._btn(t('toolbar.save'), 'btn-ghost', async () => {
-      try {
-        await ProjectSerializer.copyToClipboard(appStore.getAll());
-        this._showToast(t('toolbar.saved'));
-      } catch {
-        this._showToast(t('toolbar.saveFailed'));
-      }
-    });
-    saveBtn.id = 'btn-save';
-    saveBtn.title = t('toolbar.saveTitle');
 
-    // Load
-    const loadBtn = this._btn(t('toolbar.load'), 'btn-ghost', async () => {
-      try {
-        const states = await ProjectSerializer.pasteFromClipboard();
-        if (!states) { this._showToast(t('toolbar.loadEmpty')); return; }
-        if (appStore.isPlaying) playbackController.stop();
-        appStore.loadProject(states);
-        this.el.dispatchEvent(new CustomEvent('app:project-loaded', { bubbles: true }));
-        this._showToast(t('toolbar.loadSuccess'));
-      } catch (e) {
-        this._showToast(t('toolbar.loadFailed') + (e as Error).message);
-      }
-    });
-    loadBtn.id = 'btn-load';
-    loadBtn.title = t('toolbar.loadTitle');
 
     // Export MP3
     this._exportBtn = this._btn(t('toolbar.exportMp3'), 'btn-accent', async () => {
@@ -176,7 +150,7 @@ export class Toolbar {
     this._progressEl = document.createElement('span');
     this._progressEl.className = 'export-progress';
 
-    right.append(langToggle, saveBtn, loadBtn, this._exportBtn, this._progressEl);
+    right.append(langToggle, this._exportBtn, this._progressEl);
 
     el.append(logo, center, right);
     return el;

@@ -29,6 +29,8 @@ export class App {
   private _audioPlayer = new Audio();
   private _currentPlayingSrc: string | null = null;
   private _currentPlayingBtn: HTMLElement | null = null;
+  private _isInitialLoad = true;
+  private _hasShownNewCompHint = false;
 
   constructor(private root: HTMLElement) {
     this.toolbar = new Toolbar();
@@ -115,10 +117,11 @@ export class App {
         </div>
         <div class="codec-actions">
           <button class="codec-btn btn-ghost" id="btn-reset-codec">${t('app.codecReset')}</button>
-          <button class="codec-btn btn-ghost" id="btn-copy-codec" title="${t('toolbar.saveTitle')}">${t('app.codecCopy')}</button>
+          <button class="codec-btn btn-ghost" id="btn-copy-codec" title="${t('app.saveTitle')}">${t('app.codecCopy')}</button>
+          <button class="codec-btn btn-ghost" id="btn-paste-codec" title="${t('app.loadTitle')}">${t('app.codecPaste')}</button>
           <button class="codec-btn btn-ghost" id="btn-load-mp3">${t('app.codecLoadMp3')}</button>
           <input type="file" id="input-load-mp3" accept=".mp3" style="display:none">
-          <button class="codec-btn btn-accent-small" id="btn-apply-codec" title="${t('toolbar.loadTitle')}">${t('app.codecApply')}</button>
+          <button class="codec-btn btn-accent-small" id="btn-apply-codec" title="${t('app.loadTitle')}">${t('app.codecApply')}</button>
         </div>
       </div>
       <div class="codec-body">
@@ -167,9 +170,30 @@ export class App {
       }
     });
 
+    codecSection.querySelector('#btn-paste-codec')?.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const textarea = this.root.querySelector<HTMLTextAreaElement>('#codec-textarea');
+      if (!textarea) return;
+      try {
+        const text = await navigator.clipboard.readText();
+        const raw = text.trim();
+        const states = ProjectSerializer.deserialize(raw);
+        if (!states || states.length === 0) {
+          this._showToast(t('app.codecPasteInvalid'));
+          return;
+        }
+        textarea.value = raw;
+        this._showToast(t('app.codecPasteSuccess'));
+      } catch {
+        this._showToast(t('app.codecPasteFailed'));
+      }
+    });
+
     const fileInput = codecSection.querySelector('#input-load-mp3') as HTMLInputElement;
     codecSection.querySelector('#btn-load-mp3')?.addEventListener('click', (e) => {
       e.stopPropagation();
+      // 发放“免死金牌”：因为打开文件管理器会导致浏览器切后台，防止回来时被强制重载
+      (window as any).__tmx_prevent_reload = true;
       fileInput?.click();
     });
 
@@ -339,12 +363,16 @@ export class App {
 
     // Show global mobile pull-up hint
     if (window.innerWidth <= 640) {
-      const hint = document.createElement('div');
-      hint.className = 'mobile-scroll-hint';
-      hint.textContent = t('panel.scrollHint');
-      document.body.appendChild(hint);
-      setTimeout(() => hint.remove(), 5500);
+      this._showMobileHint(t('panel.scrollHint'), 5500);
     }
+  }
+
+  private _showMobileHint(msg: string, duration: number = 4000): void {
+    const hint = document.createElement('div');
+    hint.className = 'mobile-scroll-hint';
+    hint.textContent = msg;
+    document.body.appendChild(hint);
+    setTimeout(() => hint.remove(), duration);
   }
 
   private _bindResizer(resizer: HTMLElement, target: HTMLElement) {
@@ -709,12 +737,17 @@ export class App {
 
     const copyCodec = this.root.querySelector('#btn-copy-codec') as HTMLElement;
     if (copyCodec) {
-      copyCodec.title = t('toolbar.saveTitle'); // reuse
+      copyCodec.title = t('app.saveTitle'); // reuse
       copyCodec.textContent = t('app.codecCopy');
+    }
+    const pasteCodec = this.root.querySelector('#btn-paste-codec') as HTMLElement;
+    if (pasteCodec) {
+      pasteCodec.title = t('app.loadTitle'); // reuse
+      pasteCodec.textContent = t('app.codecPaste');
     }
     const applyCodec = this.root.querySelector('#btn-apply-codec') as HTMLElement;
     if (applyCodec) {
-      applyCodec.title = t('toolbar.loadTitle'); // reuse
+      applyCodec.title = t('app.loadTitle'); // reuse
       applyCodec.textContent = t('app.codecApply');
     }
     const btnLoadMp3 = this.root.querySelector('#btn-load-mp3') as HTMLElement;
@@ -763,6 +796,7 @@ export class App {
     for (const state of appStore.getAll()) {
       this._addPanel(state.config.id);
     }
+    this._isInitialLoad = false;
   }
 
   private _addPanel(id: string): void {
@@ -773,8 +807,11 @@ export class App {
     this._bindPanelEvents(panel);
 
     // Animate in
-    requestAnimationFrame(() => panel.el.classList.add('comp--visible'));
+    requestAnimationFrame(() => {
+      panel.el.classList.add('comp--visible');
+    });
   }
+
 
   private _removePanel(id: string): void {
     const panel = this.panels.get(id);
@@ -785,10 +822,18 @@ export class App {
     }
   }
 
+  private _triggerNewCompHint(): void {
+    if (!this._hasShownNewCompHint && window.innerWidth <= 640) {
+      this._hasShownNewCompHint = true;
+      this._showMobileHint(t('panel.newCompHint'));
+    }
+  }
+
   private _bindPanelEvents(panel: CompartmentPanel): void {
     panel.el.addEventListener('compartment:add', (e) => {
       const { afterId } = (e as CustomEvent).detail;
       const newId = appStore.addCompartment(afterId);
+      this._triggerNewCompHint();
     });
 
     panel.el.addEventListener('compartment:remove', (e) => {
@@ -797,8 +842,8 @@ export class App {
     });
 
     panel.el.addEventListener('compartment:duplicate', (e) => {
-      const { newId } = (e as CustomEvent).detail;
-      this._addPanel(newId);
+      // The store already adds the compartment and triggers _addPanel, we just need to show the hint
+      this._triggerNewCompHint();
     });
   }
 
@@ -809,10 +854,7 @@ export class App {
       this.panels.forEach(p => p.resize());
     });
 
-    this.root.addEventListener('app:compartment-added', (e) => {
-      const { id } = (e as CustomEvent).detail;
-      this._addPanel(id);
-    });
+
 
     this.root.addEventListener('app:project-loaded', () => {
       for (const id of [...this.panels.keys()]) {

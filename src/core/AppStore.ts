@@ -126,6 +126,7 @@ export class AppStore {
     newConfig.bpm = src.config.bpm;
     newConfig.width = src.config.width;
     newConfig.waveType = src.config.waveType;
+    newConfig.fxType = src.config.fxType;
     newConfig.volume = src.config.volume;
     newConfig.isActive = src.config.isActive;
     const idx = this._compartments.findIndex(c => c.config.id === id) + 1;

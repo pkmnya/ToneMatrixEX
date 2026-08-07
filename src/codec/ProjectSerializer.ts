@@ -138,17 +138,7 @@ export class ProjectSerializer {
     }
   }
 
-  /** Write to clipboard */
-  static async copyToClipboard(compartments: readonly CompartmentState[]): Promise<void> {
-    const str = this.serialize(compartments);
-    await navigator.clipboard.writeText(str);
-  }
 
-  /** Read from clipboard */
-  static async pasteFromClipboard(): Promise<CompartmentState[] | null> {
-    const text = await navigator.clipboard.readText();
-    return this.deserialize(text.trim());
-  }
 
   /** Encode to URL hash */
   static toURLHash(compartments: readonly CompartmentState[]): string {
